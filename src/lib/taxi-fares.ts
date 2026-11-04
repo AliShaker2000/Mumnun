@@ -29,9 +29,9 @@ export interface FareBreakdown {
 }
 
 export const FARE_TABLE: Record<VehicleCategory, { base: number; perKm: number; minimum: number; titleAr: string }> = {
-  economy: { base: 2000, perKm: 550, minimum: 3500, titleAr: "ممنون اقتصادي" },
-  premium: { base: 2500, perKm: 650, minimum: 4500, titleAr: "ممنون المتميز" },
-  luxury:  { base: 2750, perKm: 700, minimum: 5000, titleAr: "ممنون فاخر" },
+  economy: { base: 1500, perKm: 400, minimum: 3000, titleAr: "ممنون اقتصادي" },
+  premium: { base: 2000, perKm: 500, minimum: 4000, titleAr: "ممنون المتميز" },
+  luxury:  { base: 3000, perKm: 750, minimum: 6000, titleAr: "ممنون فاخر" },
 };
 
 export const WEATHER_RATES: Record<WeatherCondition, { extra: number; label: string; icon: string }> = {

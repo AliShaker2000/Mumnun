@@ -53,10 +53,18 @@ describe("taxi fares with realistic distance, road condition, and climate", () =
     });
 
     expect(breakdown.distanceKm).toBe(8.5);
-    expect(breakdown.baseFare).toBe(2000);
+    expect(breakdown.baseFare).toBe(1500);
     expect(breakdown.weatherAllowance).toBe(WEATHER_RATES.heat.extra);
     expect(breakdown.trafficAllowance).toBe(ROAD_RATES.congested.extra);
     expect(breakdown.total % 250).toBe(0);
     expect(breakdown.total).toBeGreaterThanOrEqual(breakdown.minimumFare);
+  });
+
+  it("economy 10 km on a clear road costs 5500 IQD", () => {
+    expect(taxiFare("economy", 10, { weather: "mild", roadCondition: "normal" })).toBe(5500);
+  });
+
+  it("short economy trip never goes below the 3000 IQD minimum", () => {
+    expect(taxiFare("economy", 1, { weather: "mild", roadCondition: "normal" })).toBe(3000);
   });
 });
