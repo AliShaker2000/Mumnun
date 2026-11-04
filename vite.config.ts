@@ -13,12 +13,5 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
-    // Fallback for hosted preview/published builds where .env is not shipped.
-    // These are the public (publishable) backend URL and key — safe for browser code.
-    define: {
-      "import.meta.env.VITE_GOOGLE_MAPS_API_KEY": JSON.stringify(
-        process.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyB0PgoQXL_C7cSwXUiRF_VXFEA0uSiXnJE",
-      ),
-    },
   },
 });

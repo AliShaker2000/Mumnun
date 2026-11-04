@@ -98,6 +98,9 @@ function AdminPage() {
             <ShieldCheck className="h-6 w-6 text-primary" />
             <h1 className="text-lg font-black">لوحة الإدارة</h1>
           </div>
+          <Link to="/admin/import" className="mb-3 flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-muted-foreground hover:bg-surface-2">
+            <ScrollText className="h-4 w-4 shrink-0" />مساعد استيراد البيانات
+          </Link>
           <nav className="space-y-1">
             {visibleItems.map((item) => (
               <button key={item.key} onClick={() => { setSection(item.key); setSidebarOpen(false); }}
