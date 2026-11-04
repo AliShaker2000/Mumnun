@@ -1,24 +1,38 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { useAuth } from "@/lib/auth-context";
+import { Loader2 } from "lucide-react";
+import { useWelcomePreferences } from "@/lib/welcome-preferences";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  ssr: false,
+  head: () => ({ meta: [
+    { title: "ممنون | النقل والخدمات" },
+    { name: "description", content: "رحلات التاكسي والخدمات المنزلية في تطبيق ممنون." },
+    { property: "og:title", content: "ممنون | النقل والخدمات" },
+    { property: "og:description", content: "رحلات التاكسي والخدمات المنزلية في تطبيق ممنون." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
+  const { loading, session, roles, profile } = useAuth();
+  const { ready, completed } = useWelcomePreferences();
+
+  if (loading || !ready) {
+    return (
+      <div className="min-h-screen grid place-items-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="text-5xl font-black text-gradient">ممنون</div>
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) return <Navigate to={completed ? "/auth" : "/welcome"} />;
+  if (!profile) return <Navigate to="/select-role" />;
+  if (roles.length === 0) return <Navigate to="/select-role" />;
+  return <Navigate to="/home" />;
 }

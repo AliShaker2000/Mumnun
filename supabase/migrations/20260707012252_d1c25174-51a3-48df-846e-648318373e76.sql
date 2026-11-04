@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.find_nearby_provider_pins(numeric, numeric, text, text, uuid, numeric, int) FROM anon;
