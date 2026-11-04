@@ -1461,7 +1461,174 @@ export type Database = {
       }
     }
     Functions: {
+      accept_service_request: {
+        Args: { _request_id: string }
+        Returns: boolean
+      }
+      admin_adjust_wallet: {
+        Args: {
+          p_amount: number
+          p_note: string
+          p_type: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      admin_block_user: {
+        Args: { p_expires_at: string; p_reason: string; p_user_id: string }
+        Returns: undefined
+      }
+      admin_broadcast_notification: {
+        Args: {
+          p_body: string
+          p_single_user_id: string
+          p_target: string
+          p_title: string
+        }
+        Returns: number
+      }
+      admin_cancel_request: {
+        Args: { p_reason: string; p_request_id: string }
+        Returns: undefined
+      }
+      admin_delete_coupon: { Args: { p_coupon_id: string }; Returns: undefined }
+      admin_delete_friend_request: {
+        Args: { p_request_id: string }
+        Returns: undefined
+      }
+      admin_delete_friendship: {
+        Args: { p_user1_id: string; p_user2_id: string }
+        Returns: undefined
+      }
+      admin_delete_message: {
+        Args: { p_message_id: string }
+        Returns: undefined
+      }
+      admin_grant_role: {
+        Args: { p_role: string; p_target_user: string }
+        Returns: undefined
+      }
+      admin_reopen_request: {
+        Args: { p_request_id: string }
+        Returns: undefined
+      }
+      admin_resolve_report: {
+        Args: { p_note: string; p_report_id: string; p_status: string }
+        Returns: undefined
+      }
+      admin_revoke_role: {
+        Args: { p_role: string; p_target_user: string }
+        Returns: undefined
+      }
+      admin_save_coupon: {
+        Args: {
+          p_active: boolean
+          p_code: string
+          p_expires_at: string
+          p_id: string
+          p_max_uses: number
+          p_min_amount: number
+          p_type: string
+          p_value: number
+        }
+        Returns: string
+      }
+      admin_set_provider_status: {
+        Args: { p_status: string; p_type: string; p_user_id: string }
+        Returns: undefined
+      }
+      admin_unblock_user: { Args: { p_user_id: string }; Returns: undefined }
+      assert_staff: { Args: { p_level: string }; Returns: undefined }
+      bootstrap_first_super_admin: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
+      cancel_service_request: {
+        Args: { _reason: string; _request_id: string }
+        Returns: string
+      }
+      check_request_allowed: {
+        Args: { _user_id: string }
+        Returns: {
+          allowed: boolean
+          plan_code: string
+          reason: string
+          requests_limit: number
+          requests_used: number
+        }[]
+      }
+      find_nearby_drivers: {
+        Args: {
+          _category: string
+          _lat: number
+          _limit?: number
+          _lng: number
+          _radius_km?: number
+        }
+        Returns: {
+          distance_km: number
+          rating_avg: number
+          user_id: string
+        }[]
+      }
+      find_nearby_provider_pins: {
+        Args: {
+          _category?: string
+          _lat: number
+          _limit?: number
+          _lng: number
+          _radius_km?: number
+          _service_id?: string
+          _type: string
+        }
+        Returns: {
+          heading: number
+          lat: number
+          lng: number
+          pin_id: string
+        }[]
+      }
+      get_friend_status: { Args: { p_friend_id: string }; Returns: Json }
+      get_provider_reputation: { Args: { p_user_id: string }; Returns: Json }
       get_staff_roles: { Args: { p_user_id: string }; Returns: string[] }
+      get_subscription_stats: {
+        Args: never
+        Returns: {
+          active_subscriptions: number
+          expired_subscriptions: number
+          free_count: number
+          gold_count: number
+          monthly_revenue: number
+          silver_count: number
+          total_subscribers: number
+          yearly_revenue: number
+        }[]
+      }
+      get_user_subscription: {
+        Args: { _user_id: string }
+        Returns: {
+          auto_renew: boolean
+          badge_color: string
+          badge_label: string
+          current_period_end: string
+          max_requests_per_month: number
+          offer_priority: number
+          plan_code: string
+          plan_name_ar: string
+          priority_support: boolean
+          priority_weight: number
+          request_count: number
+          show_stats: boolean
+          status: string
+          subscription_enabled: boolean
+          tier: number
+        }[]
+      }
+      grant_provider_role_safe: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
+        Returns: boolean
+      }
+      handle_expired_subscriptions: { Args: never; Returns: number }
       has_admin_access: { Args: { p_user_id: string }; Returns: boolean }
       has_offer: {
         Args: { _request_id: string; _user_id: string }
@@ -1475,6 +1642,10 @@ export type Database = {
         Returns: boolean
       }
       has_staff_role: { Args: { p_user_id: string }; Returns: boolean }
+      increment_request_count: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
       is_request_customer: {
         Args: { _request_id: string; _user_id: string }
         Returns: boolean
@@ -1484,6 +1655,33 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { p_user_id: string }; Returns: boolean }
+      log_admin_action: {
+        Args: {
+          p_action: string
+          p_details?: Json
+          p_target_id: string
+          p_target_type: string
+        }
+        Returns: undefined
+      }
+      lookup_email_by_phone: { Args: { _phone: string }; Returns: string }
+      search_profile_by_phone: {
+        Args: { _phone: string }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          id: string
+          phone: string
+        }[]
+      }
+      transition_service_request: {
+        Args: {
+          _reason?: string
+          _request_id: string
+          _status: Database["public"]["Enums"]["request_status"]
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role:

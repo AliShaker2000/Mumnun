@@ -15,6 +15,13 @@
       "when": 1793816495462,
       "tag": "0001_mamnoon_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793816620929,
+      "tag": "0002_mamnoon_functions",
+      "breakpoints": true
     }
   ]
 }
