@@ -7,3 +7,5 @@
 - [ ] Restore Google map configuration and migrate place search.
 - [ ] Add always-visible automatic location control and prevent default-center selection.
 - [ ] Verify location success, refusal, and retry; Google rendering requires an authorized published origin.
+- [ ] Admin CSV import helper with AI column mapping
+- [ ] Fix maps so they work for real (Google Maps connector)
