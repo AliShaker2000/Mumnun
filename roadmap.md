@@ -1,5 +1,5 @@
 # Tasks
-- [ ] Limit place suggestions to the selected governorate and price only confirmed Google road distances.
+- [x] Limit place suggestions to the selected governorate and price only confirmed Google road distances (17 tests passed; build OK).
 - [x] Add bilingual welcome before sign-in.
 - [x] Verify welcome navigation and returning visits.
 - [x] Apply required package security update.
