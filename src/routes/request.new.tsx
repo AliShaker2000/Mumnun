@@ -1,5 +1,7 @@
 import { createFileRoute, useNavigate, Navigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import luxuryCar from "@/assets/car-luxury.png";
+import { GOVERNORATES, GOV_STORAGE_KEY, getGovernorate, governorateOf } from "@/lib/governorates";
 import { z } from "zod";
 import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/lib/auth-context";
@@ -67,10 +69,10 @@ const SERVICE_VISUALS: Record<string, { emoji: string; gradient: string }> = {
 
 const DEFAULT_VISUAL = { emoji: "🛠️", gradient: "from-primary to-primary-glow" };
 
-const VEHICLE_CATS: { key: VehicleCategory; label: string; emoji: string; gradient: string; eta: string; desc: string }[] = [
+const VEHICLE_CATS: { key: VehicleCategory; label: string; emoji: string; gradient: string; eta: string; desc: string; img?: string }[] = [
   { key: "economy", label: "ممنون اقتصادي", emoji: "🚗", gradient: "from-emerald-400 to-teal-500", eta: "3-5 د", desc: "توفير وسرعة في الوصول" },
   { key: "premium", label: "ممنون المتميز", emoji: "🚙", gradient: "from-sky-500 to-indigo-600", eta: "4-6 د", desc: "سيارة واسعة ومكيفة بالكامل" },
-  { key: "luxury",  label: "ممنون فاخر",   emoji: "🏎️", gradient: "from-amber-400 to-orange-500", eta: "5-8 د", desc: "أحدث الموديلات وراحة استثنائية" },
+  { key: "luxury",  label: "ممنون فاخر",   emoji: "🏎️", gradient: "from-amber-400 to-orange-500", eta: "5-8 د", desc: "أحدث الموديلات وراحة استثنائية", img: luxuryCar },
 ];
 
 function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
@@ -114,6 +116,33 @@ function NewRequest() {
   const [destLabel, setDestLabel] = useState("");
   const [mapStep, setMapStep] = useState<"pickup" | "dest">("pickup");
   const [destConfirmed, setDestConfirmed] = useState(false);
+  const [govKey, setGovKey] = useState<string | null>(null);
+  const [govReady, setGovReady] = useState(false);
+  const [govPickerOpen, setGovPickerOpen] = useState(false);
+  const [interCity, setInterCity] = useState(false);
+  useEffect(() => {
+    setGovKey(localStorage.getItem(GOV_STORAGE_KEY));
+    setGovReady(true);
+  }, []);
+  const gov = getGovernorate(govKey);
+  function chooseGov(key: string) {
+    localStorage.setItem(GOV_STORAGE_KEY, key);
+    setGovKey(key);
+    setGovPickerOpen(false);
+    const g = getGovernorate(key)!;
+    setPickupCoords({ lat: g.lat, lng: g.lng });
+    setPickupLabel(g.name);
+    setMapStep("pickup");
+    setDestConfirmed(false);
+  }
+  function confirmDest(c = destCoords) {
+    if (!c) return;
+    if (gov && !interCity && governorateOf(c).key !== gov.key) {
+      toast.error(`الوجهة خارج ${gov.name}. اختر "رحلة لمحافظة أخرى" إذا تريد السفر.`);
+      return;
+    }
+    setDestConfirmed(true);
+  }
 
   const [notes, setNotes] = useState("");
   const [routeKm, setRouteKm] = useState<number | null>(null);
@@ -180,6 +209,10 @@ function NewRequest() {
   function advanceToDestination() {
     if (!pickupCoords) {
       toast.error("يرجى تحديد موقع الانطلاق أولاً");
+      return;
+    }
+    if (gov && governorateOf(pickupCoords).key !== gov.key) {
+      toast.error(`موقع الانطلاق يجب أن يكون داخل ${gov.name}`);
       return;
     }
     setMapStep("dest");
@@ -294,6 +327,23 @@ function NewRequest() {
 
     return (
       <div className="fixed inset-0 overflow-hidden flex flex-col bg-slate-900 select-none">
+        {govReady && (!gov || govPickerOpen) && (
+          <div className="absolute inset-0 z-50 bg-background/95 backdrop-blur p-5 overflow-y-auto" dir="rtl">
+            <h2 className="text-xl font-black mb-1">اختر محافظتك</h2>
+            <p className="text-sm text-muted-foreground mb-4">ستكون طلباتك داخل هذه المحافظة.</p>
+            <div className="grid grid-cols-2 gap-2">
+              {GOVERNORATES.map((g) => (
+                <button key={g.key} type="button" onClick={() => chooseGov(g.key)}
+                  className={`py-3 rounded-2xl border font-bold text-sm btn-press ${g.key === govKey ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
+                  {g.name}
+                </button>
+              ))}
+            </div>
+            {gov && (
+              <button type="button" onClick={() => setGovPickerOpen(false)} className="mt-4 w-full py-3 text-sm text-muted-foreground">إلغاء</button>
+            )}
+          </div>
+        )}
         {/* Full-Screen Real Map Canvas (Locked full screen like Baly) */}
         <div className="absolute inset-0 z-0">
           <MapPicker
@@ -319,19 +369,23 @@ function NewRequest() {
               if (mapStep === "pickup") {
                 setPickupCoords(c);
                 if (addr) setPickupLabel(addr);
+                if (gov && governorateOf(c).key !== gov.key) {
+                  toast.error(`موقع الانطلاق يجب أن يكون داخل ${gov.name}`);
+                  return;
+                }
                 setMapStep("dest");
                 setDestConfirmed(false);
               } else {
                 setDestCoords(c);
                 if (addr) setDestLabel(addr);
-                setDestConfirmed(true);
+                confirmDest(c);
               }
             }}
             onConfirm={() => {
               if (mapStep === "pickup") {
                 advanceToDestination();
               } else {
-                setDestConfirmed(true);
+                confirmDest();
               }
             }}
             onChange={(c, addr) => {
@@ -356,6 +410,13 @@ function NewRequest() {
               aria-label="رجوع"
             >
               <ArrowRight className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setGovPickerOpen(true)}
+              className="h-11 px-3 rounded-2xl bg-white/95 shadow-lg border border-border/40 text-xs font-black text-foreground shrink-0 btn-press"
+            >
+              📍 {gov?.name ?? "المحافظة"}
             </button>
 
             {/* 2-Step Toggle Pills: 1. Pickup | 2. Destination */}
@@ -431,8 +492,26 @@ function NewRequest() {
               </div>
               <button
                 type="button"
+                onClick={() => setInterCity((v) => !v)}
+                className={`w-full py-2 rounded-xl text-xs font-bold border btn-press ${interCity ? "bg-primary text-primary-foreground border-primary" : "border-border/60 text-muted-foreground"}`}
+              >
+                {interCity ? "✓ رحلة لمحافظة أخرى" : "رحلة لمحافظة أخرى؟"}
+              </button>
+              {interCity && (
+                <div className="flex gap-1.5 overflow-x-auto pb-1">
+                  {GOVERNORATES.filter((g) => g.key !== gov?.key).map((g) => (
+                    <button key={g.key} type="button"
+                      onClick={() => { setDestCoords({ lat: g.lat, lng: g.lng }); setDestLabel(g.name); }}
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold border border-border/60 shrink-0 btn-press">
+                      {g.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <button
+                type="button"
                 disabled={!destCoords}
-                onClick={() => setDestConfirmed(true)}
+                onClick={() => confirmDest()}
                 className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-black text-base shadow-lg flex items-center justify-center gap-2 btn-press disabled:opacity-50"
               >
                 <span>تأكيد الوجهة</span>
@@ -460,7 +539,9 @@ function NewRequest() {
                       active ? "ring-2 ring-primary border-primary" : "border-border/60"
                     }`}
                   >
-                    <div className="text-3xl shrink-0">{c.emoji}</div>
+                    {c.img
+                      ? <img src={c.img} alt={c.label} width={56} height={38} className="w-14 h-9 object-contain shrink-0" />
+                      : <div className="text-3xl shrink-0">{c.emoji}</div>}
                     <div className="flex-1 font-black text-sm text-foreground">{c.label}</div>
                     <div className="font-black text-base text-primary shrink-0">{fare.toLocaleString()} د.ع</div>
                   </button>
