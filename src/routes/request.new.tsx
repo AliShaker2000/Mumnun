@@ -113,6 +113,7 @@ function NewRequest() {
   const [destCoords, setDestCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [destLabel, setDestLabel] = useState("");
   const [mapStep, setMapStep] = useState<"pickup" | "dest">("pickup");
+  const [destConfirmed, setDestConfirmed] = useState(false);
 
   const [notes, setNotes] = useState("");
   const [routeKm, setRouteKm] = useState<number | null>(null);
@@ -182,17 +183,8 @@ function NewRequest() {
       return;
     }
     setMapStep("dest");
-    toast.success("تم تثبيت موقع الانطلاق! الآن حدد وجهة الوصول على الخريطة 🎯");
-
-    // If destination not set yet, set a sensible initial position near pickup
-    if (!destCoords && pickupCoords) {
-      const initialDest = {
-        lat: Number((pickupCoords.lat + 0.025).toFixed(6)),
-        lng: Number((pickupCoords.lng + 0.022).toFixed(6)),
-      };
-      setDestCoords(initialDest);
-      setDestLabel("وجهة مقترحة على المسار");
-    }
+    setDestConfirmed(false);
+    if (!destCoords) setDestCoords(pickupCoords);
   }
 
   // Submit Request
@@ -318,30 +310,27 @@ function NewRequest() {
             showLocateButton={true}
             isFullScreen={true}
             hideOutsideButtons={true}
-            bottomOffset={mapStep === "pickup" ? 180 : drawerExpanded ? 360 : 130}
+            bottomOffset={mapStep === "dest" && destConfirmed ? 300 : 150}
             confirmLabel={
-              mapStep === "pickup" ? "تأكيد الانطلاق والانتقال للوجهة" : "تأكيد الوجهة"
+              mapStep === "pickup" ? "تأكيد الانطلاق" : "تأكيد الوجهة"
             }
             onSelectPlace={(c, addr) => {
               if (mapStep === "pickup") {
                 setPickupCoords(c);
                 if (addr) setPickupLabel(addr);
-                toast.success("تم اختيار موقع الانطلاق! جاري تحويلك للوجهة 🎯");
-                setTimeout(() => {
-                  advanceToDestination();
-                }, 300);
+                setMapStep("dest");
+                setDestConfirmed(false);
               } else {
                 setDestCoords(c);
                 if (addr) setDestLabel(addr);
-                setDrawerExpanded(true);
+                setDestConfirmed(true);
               }
             }}
             onConfirm={() => {
               if (mapStep === "pickup") {
                 advanceToDestination();
               } else {
-                toast.success("تم تأكيد الوجهة ✓");
-                setDrawerExpanded(true);
+                setDestConfirmed(true);
               }
             }}
             onChange={(c, addr) => {
@@ -372,7 +361,7 @@ function NewRequest() {
             <div className="flex-1 bg-white/95 backdrop-blur-md rounded-2xl p-1 shadow-lg border border-border/40 flex items-center gap-1">
               <button
                 type="button"
-                onClick={() => setMapStep("pickup")}
+                onClick={() => { setMapStep("pickup"); setDestConfirmed(false); }}
                 className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 btn-press ${
                   mapStep === "pickup"
                     ? "bg-sky-600 text-white shadow-md scale-[1.02]"
@@ -407,297 +396,84 @@ function NewRequest() {
           </div>
         </div>
 
-        {/* STEP 1 FLOATING POPUP: PICKUP CONFIRMATION & MANUAL SELECTION */}
+        {/* STEP 1: PICKUP */}
         {mapStep === "pickup" && (
-          <div className="mt-auto relative z-30 p-4 pb-6 bg-gradient-to-t from-slate-950 via-slate-900/90 to-transparent">
-            <div className="bg-white/95 backdrop-blur-md rounded-3xl p-4 shadow-2xl border border-border/50 max-w-md mx-auto space-y-3 animate-in slide-in-from-bottom-5">
-              <div className="flex items-center justify-between text-xs font-bold text-sky-600">
-                <span className="flex items-center gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-full bg-sky-500 animate-pulse" />
-                  الخطوة الأولى: تحديد موقع الانطلاق
-                </span>
-                <span className="text-[10px] bg-sky-50 text-sky-700 px-2 py-0.5 rounded-full border border-sky-100 font-bold">
-                  سحب يدوي أو بحث
-                </span>
-              </div>
-
-              <div className="flex items-start gap-2.5">
-                <div className="h-9 w-9 rounded-2xl bg-sky-100 text-sky-600 grid place-items-center shrink-0 mt-0.5">
-                  <MapPin className="h-5 w-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[11px] font-bold text-sky-600">نقطة ركوب الكابتن</div>
-                  <div className="text-sm font-black text-foreground truncate">
-                    {pickupLabel || "حرك الخريطة لوضع الدبوس على موقعك بالضبط"}
-                  </div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">
-                    اسحب الخريطة لتغيير مكانك يدوياً، أو اختر من الأماكن الشائعة أدناه
-                  </div>
+          <div className="mt-auto relative z-30 p-4 pb-6">
+            <div className="bg-white/95 backdrop-blur-md rounded-3xl p-4 shadow-2xl border border-border/50 max-w-md mx-auto space-y-3">
+              <div className="flex items-center gap-2.5">
+                <MapPin className="h-5 w-5 text-sky-600 shrink-0" />
+                <div className="text-sm font-black text-foreground truncate">
+                  {pickupLabel || "حرّك الخريطة إلى موقعك"}
                 </div>
               </div>
-
-              {/* Quick Popular Baghdad Pickup Spots */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] font-bold">
-                <span className="text-muted-foreground text-[10px] shrink-0">أماكن سريعة:</span>
-                {[
-                  { name: "المنصور", lat: 33.3152, lng: 44.3512 },
-                  { name: "الكرادة", lat: 33.3032, lng: 44.4218 },
-                  { name: "الجادرية", lat: 33.2755, lng: 44.3789 },
-                  { name: "زيونة", lat: 33.3325, lng: 44.4521 },
-                ].map((spot) => (
-                  <button
-                    key={spot.name}
-                    type="button"
-                    onClick={() => {
-                      setPickupCoords({ lat: spot.lat, lng: spot.lng });
-                      setPickupLabel(`بغداد - ${spot.name}`);
-                    }}
-                    className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-sky-50 hover:text-sky-700 text-slate-700 border border-slate-200 shrink-0 btn-press transition"
-                  >
-                    📍 {spot.name}
-                  </button>
-                ))}
-              </div>
-
               <button
                 type="button"
-                onClick={() => {
-                  if (!pickupCoords) {
-                    setPickupCoords({ lat: 33.3152, lng: 44.3512 });
-                    setPickupLabel("بغداد - المنصور (محدد يدوياً)");
-                  }
-                  advanceToDestination();
-                }}
-                className="w-full h-14 rounded-2xl bg-gradient-to-r from-sky-600 to-primary text-white font-black text-base shadow-lg shadow-sky-600/30 flex items-center justify-center gap-2 btn-press"
+                onClick={advanceToDestination}
+                className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-black text-base shadow-lg flex items-center justify-center gap-2 btn-press"
               >
-                <span>تأكيد موقع الانطلاق والانتقال للوجهة</span>
+                <span>تأكيد الانطلاق</span>
                 <ArrowLeft className="h-5 w-5" />
               </button>
             </div>
           </div>
         )}
 
-        {/* STEP 2 BOTTOM DRAWER: DESTINATION, REAL PRICING, VEHICLES & DISPATCH */}
-        {mapStep === "dest" && (
-          <div className="mt-auto relative z-30 bg-white/98 backdrop-blur-xl rounded-t-[32px] shadow-2xl border-t border-border/60 max-w-lg mx-auto w-full transition-all duration-300 animate-in slide-in-from-bottom-8">
-            {/* Drawer Handle & Expand Toggle */}
-            <div
-              onClick={() => setDrawerExpanded((e) => !e)}
-              className="py-2.5 flex flex-col items-center justify-center cursor-pointer select-none"
-            >
-              <div className="w-12 h-1.5 rounded-full bg-slate-300 mb-1" />
-              <div className="text-[11px] font-bold text-muted-foreground flex items-center gap-1">
-                <span>تفاصيل الرحلة والأسعار الفعلية الحقيقية</span>
-                {drawerExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
-              </div>
-            </div>
-
-            <div className="px-5 pb-5 space-y-3.5 max-h-[75dvh] overflow-y-auto">
-              {/* Route Summary Chips: allows clicking pickup chip to go back and edit pickup manually */}
-              <div className="grid grid-cols-2 gap-2 text-right">
-                <button
-                  type="button"
-                  onClick={() => setMapStep("pickup")}
-                  className="bg-slate-50 hover:bg-slate-100 rounded-2xl p-2.5 border border-border/60 text-right btn-press transition"
-                  title="اضغط لتعديل موقع الانطلاق يدوياً"
-                >
-                  <div className="text-[10px] font-bold text-sky-600 flex items-center gap-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-sky-500" /> الانطلاق (تعديل ✏️):
-                  </div>
-                  <div className="text-xs font-bold truncate text-foreground mt-0.5">
-                    {pickupLabel || "موقعي الحالي"}
-                  </div>
-                </button>
-
-                <div className="bg-rose-50/70 rounded-2xl p-2.5 border border-rose-200/60 text-right">
-                  <div className="text-[10px] font-bold text-rose-600 flex items-center gap-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-rose-500" /> الوجهة 🎯:
-                  </div>
-                  <div className="text-xs font-bold truncate text-foreground mt-0.5">
-                    {destLabel || "نقطة الوصول المحددة"}
-                  </div>
+        {/* STEP 2: DESTINATION */}
+        {mapStep === "dest" && !destConfirmed && (
+          <div className="mt-auto relative z-30 p-4 pb-6">
+            <div className="bg-white/95 backdrop-blur-md rounded-3xl p-4 shadow-2xl border border-border/50 max-w-md mx-auto space-y-3">
+              <div className="flex items-center gap-2.5">
+                <MapPin className="h-5 w-5 text-rose-600 shrink-0" />
+                <div className="text-sm font-black text-foreground truncate">
+                  {destLabel || "حرّك الخريطة إلى وجهتك"}
                 </div>
               </div>
-
-              {/* Distance & Realistic Metrics Banner */}
-              {routeKm !== null ? (
-                <div className="bg-gradient-to-r from-sky-50 via-indigo-50 to-emerald-50 rounded-2xl p-3 border border-sky-100 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Compass className="h-4 w-4 text-primary shrink-0" />
-                    <div>
-                      <div className="text-xs font-black text-foreground">
-                        مسافة المسار: {routeKm.toFixed(1)} كم · وصول خلال ~{estimatedEtaMinutes} د
-                      </div>
-                      <div className="text-[10px] text-muted-foreground">تسعيرة حقيقية حسب مسافة الطريق الفعلية والطقس</div>
-                    </div>
-                  </div>
-                  <div className="text-left">
-                    <span className="text-[10px] bg-white px-2 py-1 rounded-full font-bold text-primary shadow-sm border border-primary/20">
-                      دقة 100%
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-slate-50 rounded-2xl p-2.5 text-center text-xs text-muted-foreground border border-dashed border-border">
-                  حرك الخريطة لتحديد نقطة الوصول لحساب المسافة
-                </div>
-              )}
-
-              {/* Expanded details: Climate & Road Traffic Adjustments */}
-              {drawerExpanded && (
-                <>
-                  {/* Road Traffic Factor (Normal vs Rush Hour Traffic) */}
-                  <div className="space-y-1.5">
-                    <div className="text-xs font-bold text-muted-foreground flex items-center justify-between">
-                      <span>🚦 حالة الطريق وحركة السير</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setRoadCondition("normal")}
-                        className={`py-2 px-3 rounded-2xl text-xs font-bold transition-all btn-press border flex items-center justify-center gap-1.5 ${
-                          roadCondition === "normal"
-                            ? "bg-emerald-600 text-white border-emerald-700 shadow"
-                            : "bg-slate-50 border-border/60"
-                        }`}
-                      >
-                        <span>🟢 طريق سالك</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setRoadCondition("congested")}
-                        className={`py-2 px-3 rounded-2xl text-xs font-bold transition-all btn-press border flex items-center justify-center gap-1.5 ${
-                          roadCondition === "congested"
-                            ? "bg-amber-600 text-white border-amber-700 shadow"
-                            : "bg-slate-50 border-border/60"
-                        }`}
-                      >
-                        <span>🟡 ازدحام وذروة (+{ROAD_RATES.congested.extra} د.ع)</span>
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Vehicle Selection Cards with Realistic Fares */}
-              <div className="space-y-2">
-                <div className="text-xs font-bold text-muted-foreground">اختر فئة السيارة</div>
-                <div className="space-y-2">
-                  {VEHICLE_CATS.map((c) => {
-                    const active = vehicleCategory === c.key;
-                    const fare =
-                      routeKm !== null
-                        ? taxiFare(c.key, routeKm, {
-                            weather: weatherCondition,
-                            roadCondition,
-                          })
-                        : FARE_TABLE[c.key].minimum;
-
-                    return (
-                      <button
-                        key={c.key}
-                        type="button"
-                        onClick={() => setVehicleCategory(c.key)}
-                        className={`w-full text-right p-3 rounded-2xl btn-press transition-all flex items-center gap-3 border ${
-                          active
-                            ? "bg-white ring-2 ring-primary border-primary shadow-lg scale-[1.01]"
-                            : "bg-slate-50/80 border-border/60 hover:bg-white"
-                        }`}
-                      >
-                        <div
-                          className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${c.gradient} grid place-items-center text-2xl shadow-md shrink-0`}
-                        >
-                          {c.emoji}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-black text-sm text-foreground">{c.label}</div>
-                          <div className="text-[11px] text-muted-foreground">{c.desc} · وصول {c.eta}</div>
-                        </div>
-                        <div className="text-left shrink-0">
-                          <div className="font-black text-base text-primary">
-                            {fare.toLocaleString()} د.ع
-                          </div>
-                          <div className="text-[10px] text-muted-foreground">تسعيرة واقعية دقيقة</div>
-                        </div>
-                        {active && <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Transparent Price Breakdown Toggle (Proving real pricing) */}
-              <div className="bg-slate-50 border border-border/60 rounded-2xl p-2.5">
-                <button
-                  type="button"
-                  onClick={() => setShowFareDetails((d) => !d)}
-                  className="w-full flex items-center justify-between text-xs font-bold text-muted-foreground hover:text-foreground"
-                >
-                  <span className="flex items-center gap-1.5">
-                    <span>📊 تفاصيل الحسبة الحقيقية (شفافية 100%)</span>
-                  </span>
-                  <span>{showFareDetails ? "إخفاء التفاصيل ▲" : "عرض الحسبة بالدينار ▼"}</span>
-                </button>
-
-                {showFareDetails && (
-                  <div className="mt-2.5 pt-2 border-t border-border/60 space-y-1.5 text-xs">
-                    <div className="flex items-center justify-between text-muted-foreground">
-                      <span>فتحة العداد (الأساسية):</span>
-                      <span className="font-bold text-foreground">{currentBreakdown.baseFare.toLocaleString()} د.ع</span>
-                    </div>
-                    <div className="flex items-center justify-between text-muted-foreground">
-                      <span>أجرة المسافة ({currentBreakdown.distanceKm} كم × {FARE_TABLE[vehicleCategory].perKm} د.ع):</span>
-                      <span className="font-bold text-foreground">+{currentBreakdown.distanceFare.toLocaleString()} د.ع</span>
-                    </div>
-                    {currentBreakdown.weatherAllowance > 0 && (
-                      <div className="flex items-center justify-between text-muted-foreground">
-                        <span>بدل الطقس ({WEATHER_RATES[weatherCondition].label}):</span>
-                        <span className="font-bold text-foreground">+{currentBreakdown.weatherAllowance.toLocaleString()} د.ع</span>
-                      </div>
-                    )}
-                    {currentBreakdown.trafficAllowance > 0 && (
-                      <div className="flex items-center justify-between text-muted-foreground">
-                        <span>بدل حركة السير ({ROAD_RATES[roadCondition].label}):</span>
-                        <span className="font-bold text-foreground">+{currentBreakdown.trafficAllowance.toLocaleString()} د.ع</span>
-                      </div>
-                    )}
-                    <div className="pt-1.5 border-t border-border/40 flex items-center justify-between font-black text-primary">
-                      <span>الإجمالي النهائي (مقرب لأقرب 250 د.ع):</span>
-                      <span>{currentBreakdown.total.toLocaleString()} د.ع</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Notes to driver */}
-              <div>
-                <input
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="ملاحظة للسائق (اختياري: قرب مدخل المجمع، سيارة واضحة...)"
-                  className="w-full bg-slate-50 border border-border/80 rounded-2xl px-4 py-2.5 text-xs font-medium outline-none focus:border-primary"
-                />
-              </div>
-
-              {/* Dispatch Action Button */}
               <button
                 type="button"
-                disabled={busy || !pickupCoords || !destCoords}
-                onClick={submit}
-                className="w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-primary-glow text-primary-foreground font-black text-base shadow-xl glow-primary btn-press disabled:opacity-50 flex items-center justify-center gap-2"
+                disabled={!destCoords}
+                onClick={() => setDestConfirmed(true)}
+                className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-black text-base shadow-lg flex items-center justify-center gap-2 btn-press disabled:opacity-50"
               >
-                {busy ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <>
-                    <span>طلب الكابتن الآن</span>
-                    <span className="opacity-90 font-bold">· {activeFare.toLocaleString()} د.ع</span>
-                    <ArrowLeft className="h-5 w-5" />
-                  </>
-                )}
+                <span>تأكيد الوجهة</span>
+                <ArrowLeft className="h-5 w-5" />
               </button>
             </div>
+          </div>
+        )}
+
+        {/* STEP 3: CARS ONLY */}
+        {mapStep === "dest" && destConfirmed && (
+          <div className="mt-auto relative z-30 bg-white rounded-t-[32px] shadow-2xl border-t border-border/60 max-w-lg mx-auto w-full p-5 space-y-3">
+            <div className="space-y-2">
+              {VEHICLE_CATS.map((c) => {
+                const active = vehicleCategory === c.key;
+                const fare = routeKm !== null
+                  ? taxiFare(c.key, routeKm, { weather: weatherCondition, roadCondition })
+                  : FARE_TABLE[c.key].minimum;
+                return (
+                  <button
+                    key={c.key}
+                    type="button"
+                    onClick={() => setVehicleCategory(c.key)}
+                    className={`w-full text-right p-3 rounded-2xl btn-press flex items-center gap-3 border ${
+                      active ? "ring-2 ring-primary border-primary" : "border-border/60"
+                    }`}
+                  >
+                    <div className="text-3xl shrink-0">{c.emoji}</div>
+                    <div className="flex-1 font-black text-sm text-foreground">{c.label}</div>
+                    <div className="font-black text-base text-primary shrink-0">{fare.toLocaleString()} د.ع</div>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              disabled={busy || !pickupCoords || !destCoords}
+              onClick={submit}
+              className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-black text-base shadow-xl btn-press disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <span>اطلب الآن</span>}
+            </button>
           </div>
         )}
       </div>
