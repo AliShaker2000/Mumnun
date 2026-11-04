@@ -309,6 +309,7 @@ function NewRequest() {
             }
             showLocateButton={true}
             isFullScreen={true}
+            searchTop={72}
             hideOutsideButtons={true}
             bottomOffset={mapStep === "dest" && destConfirmed ? 300 : 150}
             confirmLabel={
