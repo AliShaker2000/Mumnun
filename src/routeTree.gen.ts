@@ -28,6 +28,7 @@ import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AdminBootstrapRouteImport } from './routes/admin/bootstrap'
 import { Route as AdminMonitoringRouteImport } from './routes/admin/monitoring'
 import { Route as AdminSubscriptionsRouteImport } from './routes/admin/subscriptions'
+import { Route as AdminImportRouteImport } from './routes/admin_.import'
 import { Route as OnboardingDriverRouteImport } from './routes/onboarding.driver'
 import { Route as OnboardingWorkerRouteImport } from './routes/onboarding.worker'
 import { Route as RequestIdRouteImport } from './routes/request.$id'
@@ -128,6 +129,11 @@ const AdminSubscriptionsRoute = AdminSubscriptionsRouteImport.update({
   path: '/subscriptions',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminImportRoute = AdminImportRouteImport.update({
+  id: '/admin_/import',
+  path: '/admin/import',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardingDriverRoute = OnboardingDriverRouteImport.update({
   id: '/onboarding/driver',
   path: '/onboarding/driver',
@@ -169,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/admin/bootstrap': typeof AdminBootstrapRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
+  '/admin/import': typeof AdminImportRoute
   '/onboarding/driver': typeof OnboardingDriverRoute
   '/onboarding/worker': typeof OnboardingWorkerRoute
   '/request/$id': typeof RequestIdRoute
@@ -194,6 +201,7 @@ export interface FileRoutesByTo {
   '/admin/bootstrap': typeof AdminBootstrapRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
+  '/admin/import': typeof AdminImportRoute
   '/onboarding/driver': typeof OnboardingDriverRoute
   '/onboarding/worker': typeof OnboardingWorkerRoute
   '/request/$id': typeof RequestIdRoute
@@ -220,6 +228,7 @@ export interface FileRoutesById {
   '/admin/bootstrap': typeof AdminBootstrapRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
+  '/admin_/import': typeof AdminImportRoute
   '/onboarding/driver': typeof OnboardingDriverRoute
   '/onboarding/worker': typeof OnboardingWorkerRoute
   '/request/$id': typeof RequestIdRoute
@@ -247,6 +256,7 @@ export interface FileRouteTypes {
     | '/admin/bootstrap'
     | '/admin/monitoring'
     | '/admin/subscriptions'
+    | '/admin/import'
     | '/onboarding/driver'
     | '/onboarding/worker'
     | '/request/$id'
@@ -272,6 +282,7 @@ export interface FileRouteTypes {
     | '/admin/bootstrap'
     | '/admin/monitoring'
     | '/admin/subscriptions'
+    | '/admin/import'
     | '/onboarding/driver'
     | '/onboarding/worker'
     | '/request/$id'
@@ -297,6 +308,7 @@ export interface FileRouteTypes {
     | '/admin/bootstrap'
     | '/admin/monitoring'
     | '/admin/subscriptions'
+    | '/admin_/import'
     | '/onboarding/driver'
     | '/onboarding/worker'
     | '/request/$id'
@@ -320,6 +332,7 @@ export interface RootRouteChildren {
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
   WelcomeRoute: typeof WelcomeRoute
+  AdminImportRoute: typeof AdminImportRoute
   OnboardingDriverRoute: typeof OnboardingDriverRoute
   OnboardingWorkerRoute: typeof OnboardingWorkerRoute
   RequestIdRoute: typeof RequestIdRoute
@@ -461,6 +474,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSubscriptionsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin_/import': {
+      id: '/admin_/import'
+      path: '/admin/import'
+      fullPath: '/admin/import'
+      preLoaderRoute: typeof AdminImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/onboarding/driver': {
       id: '/onboarding/driver'
       path: '/onboarding/driver'
@@ -523,6 +543,7 @@ const rootRouteChildren: RootRouteChildren = {
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
   WelcomeRoute: WelcomeRoute,
+  AdminImportRoute: AdminImportRoute,
   OnboardingDriverRoute: OnboardingDriverRoute,
   OnboardingWorkerRoute: OnboardingWorkerRoute,
   RequestIdRoute: RequestIdRoute,
