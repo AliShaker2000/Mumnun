@@ -1,17 +1,89 @@
 {
-  "source": "code archive (-Mmnon-main_2.zip) — Mamnoon taxi & home-services app",
-  "capabilities": [
-    {"capability": "web app code (TanStack Start pages, components, server functions)", "source": "src/", "outcome": "migrate", "status": "migrated", "next_action": "verify routes in preview"},
-    {"capability": "database schema", "source": "supabase/migrations + drizzle/migrations + code-referenced tables missing from migrations", "outcome": "migrate", "status": "migrated", "next_action": "none; tables missing from the source migrations were rebuilt from how the code uses them"},
-    {"capability": "existing records", "source": "old backend (not exported)", "outcome": "migrate", "status": "pending", "next_action": "user provides CSV/JSON exports"},
-    {"capability": "auth identities (phone/email + password)", "source": "old backend auth users", "outcome": "migrate", "status": "pending", "next_action": "user export with emails, phones, original IDs"},
-    {"capability": "authorization (customer/driver/worker + staff roles)", "source": "user_roles + admin RPCs", "outcome": "migrate", "status": "migrated", "next_action": "first staff member uses /admin/bootstrap"},
-    {"capability": "subscription expiry job", "source": "supabase/functions/subscription-cron", "outcome": "replaced by daily database job", "status": "migrated", "next_action": "none"},
-    {"capability": "auth-proxy edge function", "source": "supabase/functions/auth-proxy", "outcome": "dropped (unused by app code)", "status": "accepted", "next_action": "none"},
-    {"capability": "Google Maps (browser key)", "source": "vite.config.ts fallback key", "outcome": "preserve", "status": "migrated", "next_action": "restrict key to new domain in Google Cloud"},
-    {"capability": "Google place search (server key)", "source": "maps.functions.ts", "outcome": "preserve; free-map fallback", "status": "pending", "next_action": "optional server key"},
-    {"capability": "Firebase push", "source": "src/lib/firebase.ts (VITE_FIREBASE_*)", "outcome": "preserve", "status": "pending", "next_action": "optional Firebase config values"},
-    {"capability": "native mobile apps (expo-app, mobile)", "source": "expo-app/, mobile/", "outcome": "not migrated (web-only platform)", "status": "accepted", "next_action": "none"},
-    {"capability": "verification", "source": "-", "outcome": "verify", "status": "in_progress", "next_action": "build + signup/request flow"}
-  ]
+ "source": "code archive (-Mmnon-main_2.zip) — Mamnoon taxi & home-services app",
+ "capabilities": [
+  {
+   "capability": "web app code (TanStack Start pages, components, server functions)",
+   "source": "src/",
+   "outcome": "migrate",
+   "status": "migrated",
+   "next_action": "verify routes in preview"
+  },
+  {
+   "capability": "database schema",
+   "source": "supabase/migrations + drizzle/migrations + code-referenced tables missing from migrations",
+   "outcome": "migrate",
+   "status": "migrated",
+   "next_action": "none; tables missing from the source migrations were rebuilt from how the code uses them"
+  },
+  {
+   "capability": "existing records",
+   "source": "old backend (not exported)",
+   "outcome": "migrate",
+   "status": "pending",
+   "next_action": "user provides CSV/JSON exports"
+  },
+  {
+   "capability": "auth identities (phone/email + password)",
+   "source": "old backend auth users",
+   "outcome": "migrate",
+   "status": "pending",
+   "next_action": "user export with emails, phones, original IDs"
+  },
+  {
+   "capability": "authorization (customer/driver/worker + staff roles)",
+   "source": "user_roles + admin RPCs",
+   "outcome": "migrate",
+   "status": "migrated",
+   "next_action": "first staff member uses /admin/bootstrap"
+  },
+  {
+   "capability": "subscription expiry job",
+   "source": "supabase/functions/subscription-cron",
+   "outcome": "replaced by daily database job",
+   "status": "migrated",
+   "next_action": "none"
+  },
+  {
+   "capability": "auth-proxy edge function",
+   "source": "supabase/functions/auth-proxy",
+   "outcome": "dropped (unused by app code)",
+   "status": "accepted",
+   "next_action": "none"
+  },
+  {
+   "capability": "Google Maps (browser key)",
+   "source": "vite.config.ts fallback key",
+   "outcome": "preserve",
+   "status": "migrated",
+   "next_action": "restrict key to new domain in Google Cloud"
+  },
+  {
+   "capability": "Google place search (server key)",
+   "source": "maps.functions.ts",
+   "outcome": "preserve; free-map fallback",
+   "status": "pending",
+   "next_action": "optional server key"
+  },
+  {
+   "capability": "Firebase push",
+   "source": "src/lib/firebase.ts (VITE_FIREBASE_*)",
+   "outcome": "preserve",
+   "status": "pending",
+   "next_action": "optional Firebase config values"
+  },
+  {
+   "capability": "native mobile apps (expo-app, mobile)",
+   "source": "expo-app/, mobile/",
+   "outcome": "not migrated (web-only platform)",
+   "status": "accepted",
+   "next_action": "none"
+  },
+  {
+   "capability": "verification",
+   "source": "-",
+   "outcome": "verify",
+   "status": "verified",
+   "next_action": "signup, phone sign-in, role pick and a service request checked in preview"
+  }
+ ]
 }
