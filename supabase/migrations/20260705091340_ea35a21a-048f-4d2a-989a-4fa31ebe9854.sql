@@ -1,1 +1,0 @@
-ALTER TYPE public.request_status ADD VALUE IF NOT EXISTS 'searching' AFTER 'pending';

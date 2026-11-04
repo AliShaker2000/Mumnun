@@ -1,1 +1,0 @@
-DROP FUNCTION IF EXISTS public.grant_provider_role(app_role);

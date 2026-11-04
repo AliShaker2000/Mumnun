@@ -1,1 +1,0 @@
-UPDATE public.pricing_rules SET commission_pct = 0; ALTER TABLE public.pricing_rules ALTER COLUMN commission_pct SET DEFAULT 0;
