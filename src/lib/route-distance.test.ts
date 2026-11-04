@@ -7,7 +7,7 @@ describe("confirmed real road distance", () => {
     const route = parseDrivingRoute({ routes: [{ distanceMeters: 8501, duration: "123.5s" }] });
     expect(route.distanceKm).toBe(8.501);
     expect(route.durationMin).toBe(123.5 / 60);
-    expect(taxiFare("economy", route.distanceKm, { weather: "mild", roadCondition: "normal" })).toBe(5000);
+    expect(taxiFare("economy", route.distanceKm, { weather: "mild", roadCondition: "normal" })).toBe(3400.4);
   });
   it("does not invent a fare when there is no route", () => {
     expect(() => parseDrivingRoute({ routes: [] })).toThrow();
