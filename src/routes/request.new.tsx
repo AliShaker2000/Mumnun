@@ -228,6 +228,7 @@ function NewRequest() {
 
   // Submit Request
   async function submit() {
+    if (!session) return;
     if (!pickupCoords) {
       toast.error("يرجى تحديد موقع الانطلاق");
       return;
