@@ -4,6 +4,7 @@ import { getCurrentLocation, locationError } from "@/lib/location";
 import { lookupMapPlace } from "@/lib/maps.functions";
 import { Loader2, MapPin, Crosshair, Search, X, CheckCircle2, Maximize2, Minimize2 } from "lucide-react";
 import type { ProviderPin } from "@/lib/use-nearby-providers";
+import { isInGovernorate } from "@/lib/governorates";
 
 type Coords = { lat: number; lng: number };
 
@@ -26,6 +27,7 @@ export function MapPicker({
   searchTop,
   bottomOffset = 0,
   onSelectPlace,
+  governorateKey,
 }: {
   value: Coords | null;
   onChange: (c: Coords, address?: string) => void;
@@ -43,6 +45,7 @@ export function MapPicker({
   searchTop?: number;
   bottomOffset?: number;
   onSelectPlace?: (c: Coords, address?: string) => void;
+  governorateKey?: string;
 }) {
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
@@ -305,7 +308,7 @@ export function MapPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Place search: Google Places (via our server) first, OpenStreetMap as backup.
+  // Authenticated Google search only; province changes invalidate previous suggestions.
   const placeCacheRef = useRef<Map<string, { coords: Coords; address: string }>>(new Map());
   useEffect(() => {
     if (!searchOpen || searchQuery.trim().length < 2) {
@@ -313,6 +316,7 @@ export function MapPicker({
       return;
     }
     let stale = false;
+    setSuggestions([]);
     const q = searchQuery.trim();
     const timer = setTimeout(async () => {
       if (!sessionTokenRef.current) sessionTokenRef.current = crypto.randomUUID();
@@ -321,36 +325,29 @@ export function MapPicker({
         ? { lat: typeof center.lat === "function" ? center.lat() : center.lat, lng: typeof center.lng === "function" ? center.lng() : center.lng }
         : value ?? DEFAULT_CENTER;
       try {
-        const res: any = await lookupMapPlace({ data: { action: "autocomplete", input: q, sessionToken: sessionTokenRef.current, center: c } });
+        const res: any = await lookupMapPlace({ data: { action: "autocomplete", input: q, sessionToken: sessionTokenRef.current, center: c, governorateKey } });
         if (stale) return;
         if (res.suggestions?.length) {
-          setSuggestions(res.suggestions.map((s: any) => ({ id: "g:" + s.id, text: s.text, secondary: "" })));
+          setSuggestions(res.suggestions.map((s: any) => {
+            const id = "g:" + s.id;
+            if (s.coords) placeCacheRef.current.set(id, { coords: s.coords, address: s.address || s.text });
+            return { id, text: s.text, secondary: s.address || "" };
+          }));
           return;
         }
-      } catch {
-        /* fall back below */
-      }
-      try {
-        const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=iq&accept-language=ar&limit=6`);
-        const data = await r.json();
-        if (stale) return;
-        setSuggestions(
-          (data || []).map((d: any) => {
-            const id = "o:" + d.place_id;
-            const parts = String(d.display_name || "").split(",");
-            placeCacheRef.current.set(id, { coords: { lat: parseFloat(d.lat), lng: parseFloat(d.lon) }, address: d.display_name });
-            return { id, text: d.name || parts[0], secondary: parts.slice(1, 3).join("،").trim() };
-          }),
-        );
-      } catch {
-        if (!stale) setSuggestions([]);
+        setSuggestions([]);
+      } catch (e) {
+        if (!stale) {
+          setSuggestions([]);
+          setGeoError(e instanceof Error ? e.message : "تعذّر البحث عن الأماكن؛ أعد المحاولة");
+        }
       }
     }, 350);
     return () => {
       stale = true;
       clearTimeout(timer);
     };
-  }, [searchQuery, searchOpen]);
+  }, [searchQuery, searchOpen, governorateKey]);
 
   async function pickSuggestion(id: string, label: string) {
     let place = placeCacheRef.current.get(id);
@@ -365,6 +362,11 @@ export function MapPicker({
       sessionTokenRef.current = null;
     }
     if (!place) return;
+    if (governorateKey && !isInGovernorate(place.coords, governorateKey)) {
+      setGeoError("هذا المكان خارج المحافظة المختارة");
+      return;
+    }
+    sessionTokenRef.current = null;
     const addr = place.address || label;
     setAddress(addr);
     setSearchOpen(false);

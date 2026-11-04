@@ -16,3 +16,5 @@
 - Phone-only accounts sign in with a synthetic `phone<digits>@mamnoon.app` email, which is why email auto-confirm stays on.
 - Subscription expiry runs as a daily database job calling `handle_expired_subscriptions()`; it replaced the old scheduled function.
 - Keep the welcome flow in `/welcome` with browser-persisted language preferences; language selection covers welcome and auth screens.
+- Governorate-scoped place search uses one bounded Google Text Search request with local administrative-polygon filtering, never nearest-city classification or per-result requests, to exclude neighboring provinces without fan-out.
+- Taxi prices and submission require a confirmed destination and successful Google driving-route distance; unavailable routes must never receive approximate or minimum-only placeholder prices.
