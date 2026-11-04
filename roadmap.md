@@ -9,4 +9,4 @@
 - [ ] Verify location success, refusal, and retry; Google rendering requires an authorized published origin.
 - [x] Admin CSV import helper with AI column mapping
 - [x] Fix maps so they work for real (Google Maps connector)
-- [ ] Back arrow works on every screen
+- [x] Back arrow works on every screen

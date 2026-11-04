@@ -15,6 +15,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/lib/auth-context";
 import { DriverOfferPopup } from "@/components/driver-offer-popup";
+import { GlobalBackButton } from "@/components/back-button";
 
 function NotFoundComponent() {
   return (
@@ -134,6 +135,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Outlet />
+        <GlobalBackButton />
         <DriverOfferPopup />
         <Toaster richColors position="top-center" />
       </AuthProvider>

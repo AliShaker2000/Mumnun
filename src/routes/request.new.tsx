@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, Navigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useGoBack } from "@/components/back-button";
 import luxuryCar from "@/assets/car-luxury.png";
 import { GOVERNORATES, GOV_STORAGE_KEY, getGovernorate, governorateOf } from "@/lib/governorates";
 import { z } from "zod";
@@ -116,6 +117,7 @@ function NewRequest() {
   const [destLabel, setDestLabel] = useState("");
   const [mapStep, setMapStep] = useState<"pickup" | "dest">("pickup");
   const [destConfirmed, setDestConfirmed] = useState(false);
+  const goBack = useGoBack();
   const [govKey, setGovKey] = useState<string | null>(null);
   const [govReady, setGovReady] = useState(false);
   const [govPickerOpen, setGovPickerOpen] = useState(false);
@@ -405,7 +407,7 @@ function NewRequest() {
           <div className="flex items-center gap-2 pointer-events-auto">
             <button
               type="button"
-              onClick={() => (window.history.length > 1 ? history.back() : navigate({ to: "/home" }))}
+              onClick={goBack}
               className="h-11 w-11 rounded-2xl bg-white/95 backdrop-blur-md shadow-lg border border-border/40 grid place-items-center btn-press text-foreground shrink-0"
               aria-label="رجوع"
             >
@@ -570,7 +572,7 @@ function NewRequest() {
   return (
     <div className="min-h-screen px-5 pt-10 pb-36">
       <button
-        onClick={() => (window.history.length > 1 ? history.back() : navigate({ to: "/home" }))}
+        onClick={goBack}
         className="text-sm text-muted-foreground mb-4 flex items-center gap-1"
       >
         رجوع

@@ -173,7 +173,6 @@ function RequestDetail() {
   return (
     <div className="min-h-screen flex flex-col">
       <div className="glass-strong px-5 pt-10 pb-4 sticky top-0 z-30">
-        <button onClick={() => window.history.length > 1 ? history.back() : navigate({ to: "/home" })} className="text-xs text-muted-foreground mb-2">← رجوع</button>
         <div className="flex items-center justify-between">
           <div>
             <div className="text-lg font-black">{req.type === "taxi" ? "رحلة تكسي" : "خدمة فنية"}</div>
