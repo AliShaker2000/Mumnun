@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { getGovernorate, governorateBounds, isInGovernorate } from "./governorates";
+import { parseDrivingRoute } from "./route-distance";
 
 // Only the referrer-restricted rendering key is intentionally public.
 export const getMapConfig = createServerFn({ method: "GET" }).handler(async () => ({
@@ -10,7 +12,7 @@ export const getMapConfig = createServerFn({ method: "GET" }).handler(async () =
 
 const coords = z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) });
 const input = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("autocomplete"), input: z.string().trim().min(2).max(200), sessionToken: z.string().uuid(), center: coords }),
+  z.object({ action: z.literal("autocomplete"), input: z.string().trim().min(2).max(200), sessionToken: z.string().uuid(), center: coords, governorateKey: z.string().refine((key) => !!getGovernorate(key)).optional() }),
   z.object({ action: z.literal("details"), placeId: z.string().regex(/^[A-Za-z0-9_-]+$/).max(300), sessionToken: z.string().uuid() }),
   z.object({ action: z.literal("reverse"), center: coords }),
   z.object({ action: z.literal("route"), from: coords, to: coords }),
@@ -28,9 +30,17 @@ export const lookupMapPlace = createServerFn({ method: "POST" })
     let path: string;
     let body: string | undefined;
     if (data.action === "autocomplete") {
-      path = "/places/v1/places:autocomplete";
-      headers["X-Goog-FieldMask"] = "suggestions.placePrediction.placeId,suggestions.placePrediction.text.text";
-      body = JSON.stringify({ input: data.input, sessionToken: data.sessionToken, languageCode: "ar", includedRegionCodes: ["iq"], locationBias: { circle: { center: { latitude: data.center.lat, longitude: data.center.lng }, radius: 50000 } } });
+      const governorate = getGovernorate(data.governorateKey);
+      if (governorate) {
+        // One bounded request returns coordinates, so exact boundary filtering needs no per-place fan-out.
+        path = "/places/v1/places:searchText";
+        headers["X-Goog-FieldMask"] = "places.id,places.displayName,places.formattedAddress,places.location";
+        body = JSON.stringify({ textQuery: `${data.input} ${governorate.name} العراق`, languageCode: "ar", regionCode: "IQ", pageSize: 10, locationRestriction: { rectangle: governorateBounds(governorate.key) } });
+      } else {
+        path = "/places/v1/places:autocomplete";
+        headers["X-Goog-FieldMask"] = "suggestions.placePrediction.placeId,suggestions.placePrediction.text.text";
+        body = JSON.stringify({ input: data.input, sessionToken: data.sessionToken, languageCode: "ar", includedRegionCodes: ["iq"], locationBias: { circle: { center: { latitude: data.center.lat, longitude: data.center.lng }, radius: 50000 } } });
+      }
     } else if (data.action === "details") {
       path = `/places/v1/places/${encodeURIComponent(data.placeId)}?sessionToken=${data.sessionToken}&languageCode=ar`;
       headers["X-Goog-FieldMask"] = "location,formattedAddress,displayName";
@@ -51,20 +61,21 @@ export const lookupMapPlace = createServerFn({ method: "POST" })
       console.error(`[Maps ${response.status}] ${text}`);
       if (response.status === 403) {
         if (text.includes("API_KEY_HTTP_REFERRER_BLOCKED")) throw new Error("مفتاح Google الخاص بخدمات البحث مقيّد بالمواقع؛ غيّر تقييده إلى None أو IP addresses في Google Cloud.");
-        if (text.includes("API_KEY_SERVICE_BLOCKED")) throw new Error("فعّل Places API (New) وGeocoding API ضمن خدمات المفتاح في Google Cloud.");
+        if (text.includes("API_KEY_SERVICE_BLOCKED")) throw new Error("فعّل Places API (New) وGeocoding API وRoutes API ضمن خدمات المفتاح في Google Cloud.");
       }
       throw new Error(`Google Maps [${response.status}]: ${text}`);
     }
     const result = await response.json() as any;
-    if (data.action === "autocomplete") return { suggestions: (result.suggestions ?? []).slice(0, 5).flatMap((s: any) => s.placePrediction ? [{ id: s.placePrediction.placeId as string, text: s.placePrediction.text.text as string }] : []) };
+    if (data.action === "autocomplete") {
+      if (data.governorateKey) return { suggestions: (result.places ?? []).filter((p: any) => p.location && isInGovernorate({ lat: p.location.latitude, lng: p.location.longitude }, data.governorateKey ?? "")).slice(0, 5).map((p: any) => ({ id: p.id, text: p.displayName?.text || p.formattedAddress, address: p.formattedAddress, coords: { lat: p.location.latitude, lng: p.location.longitude } })) };
+      return { suggestions: (result.suggestions ?? []).slice(0, 5).flatMap((s: any) => s.placePrediction ? [{ id: s.placePrediction.placeId as string, text: s.placePrediction.text.text as string }] : []) };
+    }
     if (data.action === "details") {
       if (!result.location) throw new Error("لا يتوفر موقع لهذا المكان");
       return { coords: { lat: result.location.latitude as number, lng: result.location.longitude as number }, address: (result.formattedAddress || result.displayName?.text || "") as string };
     }
     if (data.action === "route") {
-      const r = result.routes?.[0];
-      if (!r) throw new Error("ROUTE_NOT_FOUND");
-      return { distanceKm: (r.distanceMeters ?? 0) / 1000, durationMin: parseFloat(String(r.duration ?? "0s")) / 60 };
+      return parseDrivingRoute(result);
     }
     if (result.status !== "OK" && result.status !== "ZERO_RESULTS") throw new Error(`Google Maps: ${result.status}: ${result.error_message || ""}`);
     return { address: (result.results?.[0]?.formatted_address || "") as string };
