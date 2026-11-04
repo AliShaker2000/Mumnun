@@ -67,7 +67,7 @@ function ProfilePage() {
           )}
           <div className="text-xl font-black flex items-center justify-center gap-1.5">
             <span>{profile?.full_name}</span>
-            {isProvider && <ShieldCheck className="h-4 w-4 text-emerald-600 inline" title="هوية موثقة" />}
+            {isProvider && <ShieldCheck className="h-4 w-4 text-emerald-600 inline" aria-label="هوية موثقة" />}
           </div>
           <div className="text-xs text-muted-foreground mt-1" dir="ltr">{profile?.phone}</div>
           <div className="flex justify-center gap-1.5 mt-3 flex-wrap">
