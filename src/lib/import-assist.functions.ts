@@ -18,10 +18,6 @@ export const suggestCsvMapping = createServerFn({ method: "POST" })
     const { data: isAdmin } = await (context.supabase as any).rpc("has_admin_access", { p_user_id: context.userId });
     if (!isAdmin) throw new Error("غير مصرّح: للمديرين فقط");
 
-    // Read the live table/column list so suggestions match the real database.
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: spec } = await (supabaseAdmin as any).rest?.get?.("/") ?? { data: null };
-    void spec;
     const { schemaSummary } = await import("./import-schema");
 
     const { generateResponse, GatewayError } = await import("@lovable.dev/ai-gateway");
