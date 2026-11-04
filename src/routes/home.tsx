@@ -8,7 +8,7 @@ import {
   Sparkles, ArrowUpLeft, TrendingUp, Clock,
 } from "lucide-react";
 import { NotificationsBell } from "@/components/notifications-bell";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { useServerFn } from "@tanstack/react-start";
 import { acceptServiceRequest } from "@/lib/dispatch.functions";
 import { useTheme } from "@/lib/use-theme";

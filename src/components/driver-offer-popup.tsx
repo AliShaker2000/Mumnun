@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { respondToOffer } from "@/lib/dispatch.functions";
 import { MapPin, Check, X, Loader2, Navigation } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 type Offer = {
   id: string;

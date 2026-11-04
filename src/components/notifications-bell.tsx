@@ -3,7 +3,7 @@ import { Bell, Check } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 type Notif = {
   id: string;
