@@ -161,7 +161,7 @@ function AuthPage() {
           ))}
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-4 flex-1 flex flex-col">
+        <form noValidate onSubmit={onSubmit} className="space-y-4 flex-1 flex flex-col">
           {mode === "signup" ? (
             <>
               <Field label={t("الاسم الكامل", "Full name")} icon={<User className="h-4 w-4" />}>

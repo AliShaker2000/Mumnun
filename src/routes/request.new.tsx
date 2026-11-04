@@ -291,7 +291,7 @@ function NewRequest() {
           dest_lat: destCoords?.lat ?? null,
           dest_lng: destCoords?.lng ?? null,
           notes: notes || null,
-          distance_km: type === "taxi" && routeKm !== null ? Number(routeKm.toFixed(2)) : null,
+          distance_km: type === "taxi" ? routeKm : null,
           ...(type === "service"
             ? {
                 pricing_mode: pricingMode,

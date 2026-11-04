@@ -129,7 +129,8 @@ function RequestDetail() {
     if (!["pending", "searching"].includes(req.status as string)) return;
     const t = setInterval(() => {
       retryFn({ data: { requestId: req.id } }).catch(() => {});
-    }, 30_000);
+      loadAll();
+    }, 5000);
     return () => clearInterval(t);
   }, [req?.id, req?.status, myRole]);
 

@@ -6,6 +6,8 @@ import { useAuth } from "@/lib/auth-context";
 import { respondToOffer } from "@/lib/dispatch.functions";
 import { MapPin, Check, X, Loader2, Navigation } from "lucide-react";
 import { toast } from "@/lib/toast";
+import { OFFER_SECONDS, offerSecondsLeft } from "@/lib/dispatch-policy";
+import { Button } from "@/components/ui/button";
 
 type Offer = {
   id: string;
@@ -22,8 +24,8 @@ export function DriverOfferPopup() {
   const offerRef = useRef<Offer | null>(null);
   const [offer, setOffer] = useState<Offer | null>(null);
   const [request, setRequest] = useState<any>(null);
-  const [secondsLeft, setSecondsLeft] = useState(45);
-  const [totalSeconds, setTotalSeconds] = useState(45);
+  const [secondsLeft, setSecondsLeft] = useState(OFFER_SECONDS);
+  const [totalSeconds, setTotalSeconds] = useState(OFFER_SECONDS);
   const [busy, setBusy] = useState(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const beepIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -34,48 +36,58 @@ export function DriverOfferPopup() {
 
   useEffect(() => {
     if (!uid || !isDriver) return;
+    let stopped = false;
+    async function refreshOffer() {
+      const { data: offers } = await supabase.from("request_offers").select("*").eq("provider_id", uid ?? "").eq("status", "pending").gt("expires_at", new Date().toISOString()).order("sent_at").limit(10);
+      if (stopped) return;
+      const current = offerRef.current;
+      if (current && offers?.some((o) => o.id === current.id)) return;
+      offerRef.current = null;
+      setOffer(null);
+      setRequest(null);
+      for (const o of offers ?? []) {
+        const { data: r } = await supabase.from("service_requests").select("*").eq("id", o.request_id).maybeSingle();
+        if (stopped) return;
+        if (!r || !["pending", "searching"].includes(r.status)) continue;
+        offerRef.current = o;
+        setRequest(r);
+        setOffer(o);
+        toast("طلب رحلة جديد", { description: "لديك دقيقة لقبول الطلب", duration: offerSecondsLeft(o.expires_at) * 1000 });
+        if ("Notification" in window && Notification.permission === "granted") {
+          navigator.serviceWorker?.ready.then((registration) => registration.showNotification("طلب رحلة جديد", { body: "لديك دقيقة لقبول الطلب", tag: `ride-${o.id}`, data: { url: `/request/${o.request_id}` } })).catch(() => {});
+        }
+        return;
+      }
+    }
     const ch = supabase
       .channel(`offers-${uid}`)
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "public",
           table: "request_offers",
           filter: `provider_id=eq.${uid}`,
         },
-        async (payload: any) => {
-          const o = payload.new as Offer;
-          if (o.status !== "pending") return;
-          if (offerRef.current) return;
-          const { data: r, error } = await supabase
-            .from("service_requests")
-            .select("*")
-            .eq("id", o.request_id)
-            .maybeSingle();
-          if (error || !r) return;
-          setRequest(r);
-          setOffer(o);
-        },
+        () => { refreshOffer(); },
       )
-      .subscribe();
+      .subscribe((status) => { if (status === "SUBSCRIBED") refreshOffer(); });
+    const timer = setInterval(refreshOffer, 5000);
     return () => {
+      stopped = true;
+      clearInterval(timer);
       supabase.removeChannel(ch);
     };
   }, [uid, isDriver]);
 
   useEffect(() => {
     if (!offer) return;
-    const expiresAt = new Date(offer.expires_at).getTime();
-    const shownUntil = Math.min(expiresAt, Date.now() + 45_000);
-    const total = Math.max(1, Math.round((shownUntil - Date.now()) / 1000));
-    setTotalSeconds(total);
+    setTotalSeconds(OFFER_SECONDS);
     const tick = () => {
-      const left = Math.max(0, Math.round((shownUntil - Date.now()) / 1000));
+      const left = offerSecondsLeft(offer.expires_at);
       setSecondsLeft(left);
       if (left === 0) {
-        // Hide the popup but keep the offer open — the driver can still accept it later.
-        toast("الطلب بعده متاح بقائمة طلباتك");
+        offerRef.current = null;
         setOffer(null);
         setRequest(null);
       }
@@ -210,13 +222,13 @@ export function DriverOfferPopup() {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <button onClick={() => doRespond("reject")} disabled={busy} className="py-4 rounded-2xl border-2 border-border bg-card font-black text-base active:scale-95 transition-transform flex items-center justify-center gap-2 disabled:opacity-60">
+          <Button variant="outline" onClick={() => doRespond("reject")} disabled={busy || secondsLeft === 0} className="h-14 font-black text-base">
             <X className="h-5 w-5" /> رفض
-          </button>
-          <button onClick={() => doRespond("accept")} disabled={busy} className="py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-black text-base active:scale-95 transition-transform flex items-center justify-center gap-2 disabled:opacity-60 shadow-lg shadow-emerald-500/40">
+          </Button>
+          <Button onClick={() => doRespond("accept")} disabled={busy || secondsLeft === 0} className="h-14 font-black text-base">
             {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
             قبول
-          </button>
+          </Button>
         </div>
       </div>
     </div>
