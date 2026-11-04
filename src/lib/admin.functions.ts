@@ -350,7 +350,7 @@ export const adminListChats = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     await requireStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: chats, error } = await (supabaseAdmin as any).from("chats").select("*, participant1:profiles!chats_participant1_id_fkey(full_name, phone), participant2:profiles!chats_participant2_id_fkey(full_name, phone)").order("updated_at", { ascending: false }).limit(data.limit);
+    const { data: chats, error } = await (supabaseAdmin as any).from("chats").select("*, participant1:profiles!chats_customer_id_fkey(full_name, phone), participant2:profiles!chats_provider_id_fkey(full_name, phone)").order("updated_at", { ascending: false }).limit(data.limit);
     if (error) throw new Error("فشل تحميل المحادثات");
     return chats ?? [];
   });
@@ -396,7 +396,7 @@ export const adminGetDashboardStats = createServerFn({ method: "GET" })
       (supabaseAdmin as any).from("transactions").select("amount, type").gte("created_at", new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()),
       (supabaseAdmin as any).from("transactions").select("amount, type").gte("created_at", new Date(new Date().getFullYear(), 0, 1).toISOString()),
     ]);
-    function sumCredit(rows: any[]) { return (rows ?? []).filter((r) => r.type === "credit").reduce((s, r) => s + Number(r.amount), 0); }
+    function sumCredit(rows: any[]) { return (rows ?? []).filter((r) => r.type === "commission").reduce((s, r) => s + Math.abs(Number(r.amount)), 0); }
     return { totalUsers: usersRes.count ?? 0, totalDrivers: driversRes.count ?? 0, totalWorkers: workersRes.count ?? 0, activeDrivers: activeDriversRes.count ?? 0, activeWorkers: activeWorkersRes.count ?? 0, totalRequests: reqAllRes.count ?? 0, activeRequests: reqActiveRes.count ?? 0, completedRequests: reqDoneRes.count ?? 0, cancelledRequests: reqCancelledRes.count ?? 0, dailyRevenue: sumCredit(todayTxRes.data), monthlyRevenue: sumCredit(monthTxRes.data), yearlyRevenue: sumCredit(yearTxRes.data) };
   });
 
@@ -418,4 +418,27 @@ export const adminGetLiveRequests = createServerFn({ method: "GET" })
     const { data: requests, error } = await (supabaseAdmin as any).from("service_requests").select("id, type, status, pickup_lat, pickup_lng, dest_lat, dest_lng, pickup_text, dest_text, created_at").in("status", ["pending", "searching", "accepted", "in_progress"]).order("created_at", { ascending: false }).limit(200);
     if (error) throw new Error("فشل تحميل الطلبات");
     return requests ?? [];
+  });
+
+
+export const adminGetMonitoringData = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireStaff(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const [users, drivers, workers, activeReq, pendingRep, blk, tck] = await Promise.all([
+      (supabaseAdmin as any).from("profiles").select("id", { count: "exact", head: true }),
+      (supabaseAdmin as any).from("driver_profiles").select("id", { count: "exact", head: true }).eq("available", true),
+      (supabaseAdmin as any).from("worker_profiles").select("id", { count: "exact", head: true }).eq("available", true),
+      (supabaseAdmin as any).from("service_requests").select("id", { count: "exact", head: true }).in("status", ["pending", "searching", "accepted", "in_progress"]),
+      (supabaseAdmin as any).from("user_reports").select("*").eq("status", "pending").order("created_at", { ascending: false }).limit(20),
+      (supabaseAdmin as any).from("user_blocks").select("*, profiles!user_blocks_user_id_fkey(full_name)").order("blocked_at", { ascending: false }).limit(20),
+      (supabaseAdmin as any).from("support_tickets").select("*").eq("status", "open").order("created_at", { ascending: false }).limit(20),
+    ]);
+    return {
+      stats: { totalUsers: users.count ?? 0, activeDrivers: drivers.count ?? 0, activeWorkers: workers.count ?? 0, activeRequests: activeReq.count ?? 0 },
+      reports: (pendingRep.data ?? []) as any[],
+      blocks: (blk.data ?? []) as any[],
+      tickets: (tck.data ?? []) as any[],
+    };
   });

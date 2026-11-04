@@ -64,8 +64,8 @@ export const getProviderReviews = createServerFn({ method: "GET" })
     return obj;
   })
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
-    const { data: reviews, error } = await supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: reviews, error } = await (supabaseAdmin as any)
       .from("ratings")
       .select(`
         id, stars, professionalism, punctuality, quality, comment, created_at,
