@@ -212,7 +212,7 @@ function NewRequest() {
     let priceEstimate: number | null = null;
     if (type === "taxi" && routeKm !== null) {
       priceEstimate = taxiFare(vehicleCategory, routeKm, {
-        weather: weatherCondition,
+        weather: "mild" as const,
         roadCondition,
       });
     }
@@ -276,7 +276,7 @@ function NewRequest() {
   // Active calculated taxi fare
   const activeFare =
     routeKm !== null
-      ? taxiFare(vehicleCategory, routeKm, { weather: weatherCondition, roadCondition })
+      ? taxiFare(vehicleCategory, routeKm, { weather: "mild" as const, roadCondition })
       : FARE_TABLE[vehicleCategory].minimum;
 
   const estimatedEtaMinutes =
@@ -289,7 +289,7 @@ function NewRequest() {
     const currentBreakdown = calculateFareBreakdown(
       vehicleCategory,
       routeKm ?? 0,
-      { weather: weatherCondition, roadCondition }
+      { weather: "mild" as const, roadCondition }
     );
 
     return (
@@ -309,6 +309,7 @@ function NewRequest() {
             }
             showLocateButton={true}
             isFullScreen={true}
+            searchTop={72}
             hideOutsideButtons={true}
             bottomOffset={mapStep === "dest" && destConfirmed ? 300 : 150}
             confirmLabel={
@@ -448,7 +449,7 @@ function NewRequest() {
               {VEHICLE_CATS.map((c) => {
                 const active = vehicleCategory === c.key;
                 const fare = routeKm !== null
-                  ? taxiFare(c.key, routeKm, { weather: weatherCondition, roadCondition })
+                  ? taxiFare(c.key, routeKm, { weather: "mild" as const, roadCondition })
                   : FARE_TABLE[c.key].minimum;
                 return (
                   <button

@@ -23,6 +23,7 @@ export function MapPicker({
   confirmLabel = "تأكيد الموقع",
   isFullScreen = false,
   hideOutsideButtons = false,
+  searchTop,
   bottomOffset = 0,
   onSelectPlace,
 }: {
@@ -39,6 +40,7 @@ export function MapPicker({
   confirmLabel?: string;
   isFullScreen?: boolean;
   hideOutsideButtons?: boolean;
+  searchTop?: number;
   bottomOffset?: number;
   onSelectPlace?: (c: Coords, address?: string) => void;
 }) {
@@ -392,7 +394,7 @@ export function MapPicker({
       <div ref={containerRef} className="absolute inset-0 z-0" style={{ background: "#e5edf5" }} />
 
       {!loading && !error && (
-        <div className="absolute top-3 left-3 right-3 z-10">
+        <div className="absolute top-3 left-3 right-3 z-10" style={searchTop != null ? { top: searchTop } : undefined}>
           <div className="flex items-center gap-2 bg-white rounded-2xl shadow-lg px-3 py-2">
             <Search className="h-4 w-4 text-muted-foreground shrink-0" />
             <input
