@@ -1,4 +1,5 @@
 # Tasks
+- [ ] Ensure pickup search names the selected governorate, including Najaf, and double technician reach only.
 - [ ] Make all warning messages Arabic only.
 - [ ] Price all taxi categories at exactly 400 IQD per real driving kilometer, without base/minimum surcharges.
 - [ ] Show driver request popup and notification for 60 seconds, widen search in timed stages, then cancel unanswered requests.

@@ -2,64 +2,16 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-/**
- * Dispatch a request: find nearby drivers in expanding radius (2→5→10 km)
- * and create pending offers for them. Returns count of offers created.
- */
+/** Dispatch is created transactionally by the request insert trigger. */
 export const dispatchRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ requestId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    const { data: req, error } = await supabase
-      .from("service_requests")
-      .select("id, customer_id, type, vehicle_category, pickup_lat, pickup_lng, status")
-      .eq("id", data.requestId)
-      .single();
-    if (error || !req) throw new Error("Request not found");
-    if (req.customer_id !== userId) throw new Error("Forbidden");
-    if (req.type !== "taxi") return { offers: 0, reason: "not_taxi" };
-    if (!req.pickup_lat || !req.pickup_lng) throw new Error("Missing pickup location");
-
-    await (supabaseAdmin as any)
-      .from("service_requests")
-      .update({ status: "searching" as any, searching_started_at: new Date().toISOString() })
-      .eq("id", req.id);
-
-    const radii = [2, 5, 10];
-    let drivers: any[] = [];
-    for (const r of radii) {
-      const { data: found } = await (supabaseAdmin as any).rpc("find_nearby_drivers", {
-        _lat: req.pickup_lat,
-        _lng: req.pickup_lng,
-        _category: req.vehicle_category ?? "economy",
-        _radius_km: r,
-        _limit: 10,
-      });
-      if (found && found.length) {
-        drivers = found;
-        break;
-      }
-    }
-
-    if (!drivers.length) return { offers: 0, reason: "no_drivers" };
-
-    const rows = drivers.map((d: any) => ({
-      request_id: req.id,
-      provider_id: d.user_id,
-      distance_km: d.distance_km,
-      status: "pending",
-      expires_at: new Date(Date.now() + 7 * 24 * 3600_000).toISOString(),
-    }));
-
-    const { error: insertError } = await supabaseAdmin
-      .from("request_offers")
-      .insert(rows);
-    if (insertError) throw new Error("Failed to create offers");
-
-    return { offers: rows.length, reason: "ok" };
+    const { data: req, error } = await context.supabase.from("service_requests").select("id, customer_id, type, status").eq("id", data.requestId).single();
+    if (error || !req) throw new Error("الطلب غير موجود");
+    if (req.customer_id !== context.userId) throw new Error("ليس لديك صلاحية لهذا الطلب");
+    const { count } = await context.supabase.from("request_offers").select("id", { count: "exact", head: true }).eq("request_id", req.id).eq("status", "pending").gt("expires_at", new Date().toISOString());
+    return { offers: count ?? 0, reason: req.status };
   });
 
 /**
@@ -89,8 +41,6 @@ export const respondToOffer = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
     const { data: offer, error } = await supabase
       .from("request_offers")
       .select("id, request_id, provider_id, status")
@@ -105,10 +55,8 @@ export const respondToOffer = createServerFn({ method: "POST" })
       if (accErr) throw new Error(accErr.message.includes("request_unavailable") ? "العميل ألغى الطلب أو قبله كابتن ثاني" : accErr.message);
       return { ok: true, action: "accepted", accepted: true, requestId: offer.request_id };
     } else {
-      await supabaseAdmin
-        .from("request_offers")
-        .delete()
-        .eq("id", data.offerId);
+      const { error: rejectError } = await (supabase as any).rpc("reject_request_offer", { _offer_id: data.offerId });
+      if (rejectError) throw new Error(rejectError.message);
       return { ok: true, action: "rejected" };
     }
   });
@@ -147,65 +95,15 @@ export const providerCancelRequest = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/**
- * Retry dispatch for a request that is still searching.
- */
+/** Compatibility read: client retries never reset offers or dispatch deadlines. */
 export const retryDispatch = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ requestId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    const { data: req, error } = await supabase
-      .from("service_requests")
-      .select("id, customer_id, status, type, vehicle_category, pickup_lat, pickup_lng")
-      .eq("id", data.requestId)
-      .single();
-    if (error || !req) throw new Error("Request not found");
-    if (req.customer_id !== userId) throw new Error("Forbidden");
-    if (req.status !== "searching") throw new Error("Request is not searching");
-    if (req.type !== "taxi") return { offers: 0, reason: "not_taxi" };
-    if (!req.pickup_lat || !req.pickup_lng) throw new Error("Missing pickup location");
-
-    await supabaseAdmin
-      .from("request_offers")
-      .delete()
-      .eq("request_id", data.requestId)
-      .lt("expires_at", new Date().toISOString());
-
-    const radii = [2, 5, 10];
-    let drivers: any[] = [];
-    for (const r of radii) {
-      const { data: found } = await (supabaseAdmin as any).rpc("find_nearby_drivers", {
-        _lat: req.pickup_lat,
-        _lng: req.pickup_lng,
-        _category: req.vehicle_category ?? "economy",
-        _radius_km: r,
-        _limit: 10,
-      });
-      if (found && found.length) {
-        drivers = found;
-        break;
-      }
-    }
-
-    if (!drivers.length) return { offers: 0, reason: "no_drivers" };
-
-    const rows = drivers.map((d: any) => ({
-      request_id: req.id,
-      provider_id: d.user_id,
-      distance_km: d.distance_km,
-      status: "pending",
-      expires_at: new Date(Date.now() + 7 * 24 * 3600_000).toISOString(),
-    }));
-
-    const { error: insertError } = await supabaseAdmin
-      .from("request_offers")
-      .insert(rows);
-    if (insertError) throw new Error("Failed to create offers");
-
-    return { offers: rows.length, reason: "ok" };
+    const { data: req, error } = await context.supabase.from("service_requests").select("id, customer_id, status").eq("id", data.requestId).single();
+    if (error || !req) throw new Error("الطلب غير موجود");
+    if (req.customer_id !== context.userId) throw new Error("ليس لديك صلاحية لهذا الطلب");
+    return { offers: 0, reason: req.status };
   });
 
 /**
