@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1793816310277,
+      "tag": "0000_mamnoon_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793816495462,
+      "tag": "0001_mamnoon_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793816620929,
+      "tag": "0002_mamnoon_functions",
+      "breakpoints": true
+    }
+  ]
+}
