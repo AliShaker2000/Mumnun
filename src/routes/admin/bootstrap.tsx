@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { checkSuperAdminExists, bootstrapSuperAdmin } from "@/lib/admin.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, ShieldCheck, Crown, AlertCircle } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 export const Route = createFileRoute("/admin/bootstrap")({ ssr: false,
   head: () => ({ meta: [

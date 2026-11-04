@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { adminGetPlans, adminSavePlan, adminTogglePlan, adminGetSettings, adminSaveSettings, adminGetStats, adminGetSubscriptions } from "@/lib/subscription.functions";
 import { Loader2, ShieldCheck, Crown, Award, Sparkles, ToggleLeft, ToggleRight, Users, TrendingUp, Calendar, AlertCircle, Plus, Save, X, BadgeCheck, Headphones, BarChart3, Star, ChevronLeft } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 export const Route = createFileRoute("/admin/subscriptions")({ ssr: false,
   head: () => ({ meta: [

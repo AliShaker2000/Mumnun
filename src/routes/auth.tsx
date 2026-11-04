@@ -6,7 +6,7 @@ import { isValidPhone, normalizePhone, phoneToEmail } from "@/lib/phone";
 import { useAuth } from "@/lib/auth-context";
 import { lookupAuthEmail } from "@/lib/auth.functions";
 import { Loader2, Phone, Lock, ArrowLeft, ArrowRight, Mail, User } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { useWelcomePreferences } from "@/lib/welcome-preferences";
 import { Button } from "@/components/ui/button";
 
@@ -161,7 +161,7 @@ function AuthPage() {
           ))}
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-4 flex-1 flex flex-col">
+        <form noValidate onSubmit={onSubmit} className="space-y-4 flex-1 flex flex-col">
           {mode === "signup" ? (
             <>
               <Field label={t("الاسم الكامل", "Full name")} icon={<User className="h-4 w-4" />}>

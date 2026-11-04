@@ -2,12 +2,13 @@ import { createFileRoute, useNavigate, Navigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useGoBack } from "@/components/back-button";
 import luxuryCar from "@/assets/car-luxury.png";
-import { GOVERNORATES, GOV_STORAGE_KEY, getGovernorate, governorateOf } from "@/lib/governorates";
+import { GOVERNORATES, GOV_STORAGE_KEY, getGovernorate, isInGovernorate } from "@/lib/governorates";
+import { Button } from "@/components/ui/button";
 import { z } from "zod";
 import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Loader as Loader2, ArrowLeft, ArrowRight, MapPin, CircleCheck as CheckCircle2, User, Users, Compass, ChevronUp, ChevronDown } from "lucide-react";
 import { MapPicker } from "@/components/map-picker";
 import { dispatchRequest } from "@/lib/dispatch.functions";
@@ -15,7 +16,6 @@ import { useNearbyProviders } from "@/lib/use-nearby-providers";
 import { lookupMapPlace } from "@/lib/maps.functions";
 import {
   taxiFare,
-  approxRoadKm,
   calculateFareBreakdown,
   FARE_TABLE,
   WEATHER_RATES,
@@ -131,15 +131,19 @@ function NewRequest() {
     localStorage.setItem(GOV_STORAGE_KEY, key);
     setGovKey(key);
     setGovPickerOpen(false);
-    const g = getGovernorate(key)!;
+    const g = getGovernorate(key);
+    if (!g) return;
     setPickupCoords({ lat: g.lat, lng: g.lng });
     setPickupLabel(g.name);
     setMapStep("pickup");
     setDestConfirmed(false);
+    setDestCoords(null);
+    setDestLabel("");
+    setRouteKm(null);
   }
   function confirmDest(c = destCoords) {
     if (!c) return;
-    if (gov && !interCity && governorateOf(c).key !== gov.key) {
+    if (gov && !interCity && !isInGovernorate(c, gov.key)) {
       toast.error(`الوجهة خارج ${gov.name}. اختر "رحلة لمحافظة أخرى" إذا تريد السفر.`);
       return;
     }
@@ -148,31 +152,31 @@ function NewRequest() {
 
   const [notes, setNotes] = useState("");
   const [routeKm, setRouteKm] = useState<number | null>(null);
+  const [routeError, setRouteError] = useState<string | null>(null);
+  const [routeRetry, setRouteRetry] = useState(0);
+  const runLookup = useServerFn(lookupMapPlace);
   const [busy, setBusy] = useState(false);
 
   // Calculate distance whenever pickup and dest coords update
   useEffect(() => {
-    if (!pickupCoords || !destCoords) {
-      setRouteKm(null);
-      return;
-    }
+    setRouteKm(null);
+    setRouteError(null);
+    if (type !== "taxi" || !destConfirmed || !pickupCoords || !destCoords) return;
     let stale = false;
-    const approx = approxRoadKm(haversineKm(pickupCoords, destCoords));
-    setRouteKm(approx);
 
     const t = setTimeout(() => {
-      lookupMapPlace({ data: { action: "route", from: pickupCoords, to: destCoords } })
+      runLookup({ data: { action: "route", from: pickupCoords, to: destCoords } })
         .then((r: any) => {
-          if (!stale && r?.distanceKm > 0) setRouteKm(Number(r.distanceKm.toFixed(2)));
+          if (!stale && Number.isFinite(r?.distanceKm) && r.distanceKm >= 0) setRouteKm(r.distanceKm);
         })
-        .catch(() => {});
+        .catch((e) => { if (!stale) setRouteError(e instanceof Error ? e.message : "تعذّر حساب مسافة الطريق"); });
     }, 400);
 
     return () => {
       stale = true;
       clearTimeout(t);
     };
-  }, [pickupCoords?.lat, pickupCoords?.lng, destCoords?.lat, destCoords?.lng]);
+  }, [type, destConfirmed, pickupCoords?.lat, pickupCoords?.lng, destCoords?.lat, destCoords?.lng, routeRetry]);
 
   useEffect(() => {
     if (!pickupCoords) return;
@@ -213,7 +217,7 @@ function NewRequest() {
       toast.error("يرجى تحديد موقع الانطلاق أولاً");
       return;
     }
-    if (gov && governorateOf(pickupCoords).key !== gov.key) {
+    if (gov && !isInGovernorate(pickupCoords, gov.key)) {
       toast.error(`موقع الانطلاق يجب أن يكون داخل ${gov.name}`);
       return;
     }
@@ -224,12 +228,17 @@ function NewRequest() {
 
   // Submit Request
   async function submit() {
+    if (!session) return;
     if (!pickupCoords) {
       toast.error("يرجى تحديد موقع الانطلاق");
       return;
     }
     if (type === "taxi" && !destCoords) {
       toast.error("يرجى تحديد موقع الوجهة على الخريطة لحساب المسافة بدقة");
+      return;
+    }
+    if (type === "taxi" && (!destConfirmed || routeKm === null || routeError)) {
+      toast.error("انتظر حساب السعر من مسافة الطريق قبل الطلب");
       return;
     }
     if (type === "service" && !serviceId) {
@@ -267,7 +276,7 @@ function NewRequest() {
       const { data, error } = await supabase
         .from("service_requests")
         .insert({
-          customer_id: session!.user.id,
+          customer_id: session.user.id,
           type,
           status: "pending",
           service_id: type === "service" ? serviceId : null,
@@ -282,7 +291,7 @@ function NewRequest() {
           dest_lat: destCoords?.lat ?? null,
           dest_lng: destCoords?.lng ?? null,
           notes: notes || null,
-          distance_km: type === "taxi" && routeKm !== null ? Number(routeKm.toFixed(2)) : null,
+          distance_km: type === "taxi" ? routeKm : null,
           ...(type === "service"
             ? {
                 pricing_mode: pricingMode,
@@ -354,10 +363,11 @@ function NewRequest() {
             nearby={mapStep === "pickup" ? nearby : undefined}
             nearbyKind="car"
             autoLocateOnMount
+            governorateKey={gov?.key}
             placeholder={
               mapStep === "pickup"
-                ? "ابحث عن موقع الانطلاق في بغداد..."
-                : "ابحث عن وجهة الوصول..."
+                ? `ابحث عن موقع الانطلاق في ${gov?.name ?? "محافظتك"}...`
+                : `ابحث عن وجهة الوصول في ${gov?.name ?? "محافظتك"}...`
             }
             showLocateButton={true}
             isFullScreen={true}
@@ -371,7 +381,7 @@ function NewRequest() {
               if (mapStep === "pickup") {
                 setPickupCoords(c);
                 if (addr) setPickupLabel(addr);
-                if (gov && governorateOf(c).key !== gov.key) {
+                if (gov && !isInGovernorate(c, gov.key)) {
                   toast.error(`موقع الانطلاق يجب أن يكون داخل ${gov.name}`);
                   return;
                 }
@@ -391,6 +401,8 @@ function NewRequest() {
               }
             }}
             onChange={(c, addr) => {
+              setRouteKm(null);
+              setDestConfirmed(false);
               if (mapStep === "pickup") {
                 setPickupCoords(c);
                 setPickupLabel(addr ?? `موقعي (${c.lat.toFixed(4)}, ${c.lng.toFixed(4)})`);
@@ -526,12 +538,23 @@ function NewRequest() {
         {/* STEP 3: CARS ONLY */}
         {mapStep === "dest" && destConfirmed && (
           <div className="mt-auto relative z-30 bg-white rounded-t-[32px] shadow-2xl border-t border-border/60 max-w-lg mx-auto w-full p-5 space-y-3">
+            {routeKm === null && !routeError && (
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground" role="status">
+                <Loader2 className="h-4 w-4 animate-spin" /> جارٍ حساب سعر الطريق…
+              </div>
+            )}
+            {routeError && (
+              <div className="space-y-2">
+                <p role="alert" className="text-sm text-destructive">{routeError}</p>
+                <Button variant="outline" onClick={() => setRouteRetry((v) => v + 1)}>إعادة حساب السعر</Button>
+              </div>
+            )}
             <div className="space-y-2">
               {VEHICLE_CATS.map((c) => {
                 const active = vehicleCategory === c.key;
                 const fare = routeKm !== null
                   ? taxiFare(c.key, routeKm, { weather: "mild" as const, roadCondition })
-                  : FARE_TABLE[c.key].minimum;
+                  : null;
                 return (
                   <button
                     key={c.key}
@@ -545,14 +568,14 @@ function NewRequest() {
                       ? <img src={c.img} alt={c.label} width={56} height={38} className="w-14 h-9 object-contain shrink-0" />
                       : <div className="text-3xl shrink-0">{c.emoji}</div>}
                     <div className="flex-1 font-black text-sm text-foreground">{c.label}</div>
-                    <div className="font-black text-base text-primary shrink-0">{fare.toLocaleString()} د.ع</div>
+                    <div className="font-black text-base text-primary shrink-0">{fare !== null ? `${fare.toLocaleString()} د.ع` : "—"}</div>
                   </button>
                 );
               })}
             </div>
             <button
               type="button"
-              disabled={busy || !pickupCoords || !destCoords}
+              disabled={busy || !pickupCoords || !destCoords || routeKm === null || !!routeError}
               onClick={submit}
               className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-black text-base shadow-xl btn-press disabled:opacity-50 flex items-center justify-center gap-2"
             >

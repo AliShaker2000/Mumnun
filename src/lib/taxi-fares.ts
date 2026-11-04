@@ -1,9 +1,4 @@
-// Taxi fares calibrated to realistic Iraqi market pricing (Baly & Careem benchmarks):
-// Fully realistic calculations based on:
-// 1. Distance in km
-// 2. Road condition (normal vs congested / rush hour traffic)
-// 3. Climate & weather conditions (summer heat with continuous AC cooling vs winter cold vs mild)
-// Always rounded UP to the nearest 250 IQD denomination.
+// All vehicles use the user-defined distance-only tariff: 400 IQD per driving km.
 
 export type VehicleCategory = "economy" | "premium" | "luxury";
 export type WeatherCondition = "heat" | "rain" | "cold" | "mild";
@@ -29,9 +24,9 @@ export interface FareBreakdown {
 }
 
 export const FARE_TABLE: Record<VehicleCategory, { base: number; perKm: number; minimum: number; titleAr: string }> = {
-  economy: { base: 1500, perKm: 400, minimum: 3000, titleAr: "ممنون اقتصادي" },
-  premium: { base: 2000, perKm: 500, minimum: 4000, titleAr: "ممنون المتميز" },
-  luxury:  { base: 3000, perKm: 750, minimum: 6000, titleAr: "ممنون فاخر" },
+  economy: { base: 0, perKm: 400, minimum: 0, titleAr: "ممنون اقتصادي" },
+  premium: { base: 0, perKm: 400, minimum: 0, titleAr: "ممنون المتميز" },
+  luxury:  { base: 0, perKm: 400, minimum: 0, titleAr: "ممنون فاخر" },
 };
 
 export const WEATHER_RATES: Record<WeatherCondition, { extra: number; label: string; icon: string }> = {
@@ -56,7 +51,8 @@ export function calculateFareBreakdown(
   options?: FareOptions
 ): FareBreakdown {
   const t = FARE_TABLE[category];
-  const km = Math.max(0, distanceKm);
+  if (!Number.isFinite(distanceKm) || distanceKm < 0) throw new Error("مسافة الطريق غير صالحة");
+  const km = distanceKm;
   const weather = options?.weather ?? "heat"; // Default to heat in Iraq
   const roadCondition = options?.roadCondition ?? "normal";
 
@@ -64,17 +60,17 @@ export function calculateFareBreakdown(
   const roadData = ROAD_RATES[roadCondition];
 
   const distanceFare = t.perKm * km;
-  const subtotal = t.base + distanceFare + weatherData.extra + roadData.extra;
-  const finalTotal = roundUp250(Math.max(t.minimum, subtotal));
+  const subtotal = distanceFare;
+  const finalTotal = Number(subtotal.toFixed(3));
 
   return {
     category,
-    distanceKm: Number(km.toFixed(2)),
+    distanceKm: km,
     baseFare: t.base,
-    distanceFare: Math.round(distanceFare),
-    weatherAllowance: weatherData.extra,
-    trafficAllowance: roadData.extra,
-    subtotal: Math.round(subtotal),
+    distanceFare: finalTotal,
+    weatherAllowance: 0,
+    trafficAllowance: 0,
+    subtotal: finalTotal,
     minimumFare: t.minimum,
     total: finalTotal,
     weatherDescription: weatherData.label,

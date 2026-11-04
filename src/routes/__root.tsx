@@ -137,7 +137,7 @@ function RootComponent() {
         <Outlet />
         <GlobalBackButton />
         <DriverOfferPopup />
-        <Toaster richColors position="top-center" />
+        <Toaster richColors position="top-center" dir="rtl" />
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { ArrowRight, Loader2, Mail, ShieldCheck } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { sendPasswordReset } from "@/lib/auth.functions";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
 

@@ -1,70 +1,24 @@
 import { describe, it, expect } from "vitest";
-import {
-  taxiFare,
-  calculateFareBreakdown,
-  roundUp250,
-  WEATHER_RATES,
-  ROAD_RATES,
-} from "./taxi-fares";
+import { taxiFare, calculateFareBreakdown } from "./taxi-fares";
 
-describe("taxi fares with realistic distance, road condition, and climate", () => {
-  it("always ends in a multiple of 250 dinars for all combinations", () => {
-    for (const km of [0.5, 2.7, 5.1, 9.99, 17.4]) {
-      for (const c of ["economy", "premium", "luxury"] as const) {
-        for (const w of ["heat", "rain", "cold", "mild"] as const) {
-          for (const r of ["normal", "congested"] as const) {
-            const fare = taxiFare(c, km, { weather: w, roadCondition: r });
-            expect(fare % 250).toBe(0);
-          }
-        }
-      }
-    }
-    expect(roundUp250(5001)).toBe(5250);
+describe("400 IQD per actual driving kilometer", () => {
+  it.each(["economy", "premium", "luxury"] as const)("charges 4000 IQD for 10 km in %s", (category) => {
+    expect(taxiFare(category, 10)).toBe(4000);
   });
-
-  it("grows with distance proportionally", () => {
-    const fare5 = taxiFare("economy", 5, { weather: "mild", roadCondition: "normal" });
-    const fare15 = taxiFare("economy", 15, { weather: "mild", roadCondition: "normal" });
-    expect(fare15).toBeGreaterThan(fare5);
+  it("has no minimum or base fare", () => {
+    expect(taxiFare("economy", 1)).toBe(400);
+    expect(taxiFare("economy", 0.5)).toBe(200);
   });
-
-  it("adds climate allowance for heat (AC), rain, and cold", () => {
-    const mild = taxiFare("economy", 10, { weather: "mild", roadCondition: "normal" });
-    const heat = taxiFare("economy", 10, { weather: "heat", roadCondition: "normal" });
-    const rain = taxiFare("economy", 10, { weather: "rain", roadCondition: "normal" });
-    const cold = taxiFare("economy", 10, { weather: "cold", roadCondition: "normal" });
-
-    expect(heat).toBeGreaterThanOrEqual(mild);
-    expect(rain).toBeGreaterThanOrEqual(mild);
-    expect(cold).toBeGreaterThanOrEqual(mild);
+  it("does not round up to 250 IQD", () => {
+    expect(taxiFare("economy", 8.501)).toBe(3400.4);
   });
-
-  it("adds traffic allowance during congested road conditions", () => {
-    const normal = taxiFare("economy", 10, { weather: "mild", roadCondition: "normal" });
-    const congested = taxiFare("economy", 10, { weather: "mild", roadCondition: "congested" });
-
-    expect(congested).toBeGreaterThanOrEqual(normal);
+  it("adds no traffic or weather surcharges", () => {
+    const fare = calculateFareBreakdown("luxury", 5, { weather: "heat", roadCondition: "congested" });
+    expect(fare.total).toBe(2000);
+    expect(fare.weatherAllowance).toBe(0);
+    expect(fare.trafficAllowance).toBe(0);
   });
-
-  it("returns transparent breakdown with all factors", () => {
-    const breakdown = calculateFareBreakdown("economy", 8.5, {
-      weather: "heat",
-      roadCondition: "congested",
-    });
-
-    expect(breakdown.distanceKm).toBe(8.5);
-    expect(breakdown.baseFare).toBe(1500);
-    expect(breakdown.weatherAllowance).toBe(WEATHER_RATES.heat.extra);
-    expect(breakdown.trafficAllowance).toBe(ROAD_RATES.congested.extra);
-    expect(breakdown.total % 250).toBe(0);
-    expect(breakdown.total).toBeGreaterThanOrEqual(breakdown.minimumFare);
-  });
-
-  it("economy 10 km on a clear road costs 5500 IQD", () => {
-    expect(taxiFare("economy", 10, { weather: "mild", roadCondition: "normal" })).toBe(5500);
-  });
-
-  it("short economy trip never goes below the 3000 IQD minimum", () => {
-    expect(taxiFare("economy", 1, { weather: "mild", roadCondition: "normal" })).toBe(3000);
+  it("rejects unavailable distances", () => {
+    expect(() => taxiFare("economy", NaN)).toThrow();
   });
 });

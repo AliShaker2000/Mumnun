@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { loadGoogleMaps } from "@/lib/google-maps";
 import { Loader2, Navigation, Maximize2, Minimize2, Compass, MapPin } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 export type Coords = { lat: number; lng: number; heading?: number | null };
 

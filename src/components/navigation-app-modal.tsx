@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { X, Navigation, ExternalLink, MapPin, Check, Copy } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 export interface NavigationTarget {
   lat: number;
