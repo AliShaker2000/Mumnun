@@ -1029,6 +1029,32 @@ export type Database = {
           },
         ]
       }
+      taxi_dispatch_queue: {
+        Row: {
+          next_at: string
+          request_id: string
+          stage: number
+        }
+        Insert: {
+          next_at?: string
+          request_id: string
+          stage?: number
+        }
+        Update: {
+          next_at?: string
+          request_id?: string
+          stage?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxi_dispatch_queue_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: true
+            referencedRelation: "service_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           amount: number
@@ -1538,6 +1564,7 @@ export type Database = {
         Returns: undefined
       }
       admin_unblock_user: { Args: { p_user_id: string }; Returns: undefined }
+      advance_taxi_dispatch: { Args: { _request_id: string }; Returns: number }
       assert_staff: { Args: { p_level: string }; Returns: undefined }
       bootstrap_first_super_admin: {
         Args: { p_user_id: string }
@@ -1665,6 +1692,8 @@ export type Database = {
         Returns: undefined
       }
       lookup_email_by_phone: { Args: { _phone: string }; Returns: string }
+      process_taxi_dispatch: { Args: never; Returns: undefined }
+      reject_request_offer: { Args: { _offer_id: string }; Returns: boolean }
       search_profile_by_phone: {
         Args: { _phone: string }
         Returns: {
