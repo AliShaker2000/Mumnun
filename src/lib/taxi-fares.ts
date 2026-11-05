@@ -41,8 +41,8 @@ export const ROAD_RATES: Record<RoadCondition, { extra: number; label: string; i
   congested: { extra: 750, label: "طريق مزدحم وساعات ذروة", icon: "🟡" },
 };
 
-export function roundUp250(n: number): number {
-  return Math.ceil(n / 250) * 250;
+export function roundTo250(n: number): number {
+  return Math.round(n / 250) * 250;
 }
 
 export function calculateFareBreakdown(
@@ -61,7 +61,7 @@ export function calculateFareBreakdown(
 
   const distanceFare = t.perKm * km;
   const subtotal = distanceFare;
-  const finalTotal = Number(subtotal.toFixed(3));
+  const finalTotal = roundTo250(subtotal);
 
   return {
     category,
