@@ -80,5 +80,6 @@ export function governorateOf(p: { lat: number; lng: number }): Governorate {
 }
 
 export function getGovernorate(key: string | null | undefined) {
-  return GOVERNORATES.find((g) => g.key === key) ?? null;
+  const normalized = key?.trim().toLowerCase();
+  return GOVERNORATES.find((g) => g.key === normalized || g.name === normalized) ?? null;
 }

@@ -123,8 +123,15 @@ function NewRequest() {
   const [govPickerOpen, setGovPickerOpen] = useState(false);
   const [interCity, setInterCity] = useState(false);
   useEffect(() => {
-    setGovKey(localStorage.getItem(GOV_STORAGE_KEY));
+    const restoreGovernorate = () => {
+      const selected = getGovernorate(localStorage.getItem(GOV_STORAGE_KEY));
+      setGovKey(selected?.key ?? null);
+      if (selected) setPickupCoords({ lat: selected.lat, lng: selected.lng });
+    };
+    restoreGovernorate();
     setGovReady(true);
+    window.addEventListener("storage", restoreGovernorate);
+    return () => window.removeEventListener("storage", restoreGovernorate);
   }, []);
   const gov = getGovernorate(govKey);
   function chooseGov(key: string) {
@@ -192,7 +199,7 @@ function NewRequest() {
     type,
     category: type === "taxi" ? vehicleCategory : null,
     serviceId: type === "service" ? serviceId : null,
-    radiusKm: 5,
+    radiusKm: type === "service" ? 10 : 5,
     enabled: !!pickupCoords,
   });
 
@@ -357,7 +364,8 @@ function NewRequest() {
         )}
         {/* Full-Screen Real Map Canvas (Locked full screen like Baly) */}
         <div className="absolute inset-0 z-0">
-          <MapPicker
+          {govReady && gov && <MapPicker
+            key={`${gov.key}-${mapStep}`}
             value={mapStep === "pickup" ? pickupCoords : destCoords}
             accent={mapStep === "pickup" ? "#0284c7" : "#e11d48"}
             nearby={mapStep === "pickup" ? nearby : undefined}
@@ -411,7 +419,7 @@ function NewRequest() {
                 setDestLabel(addr ?? `وجهتي (${c.lat.toFixed(4)}, ${c.lng.toFixed(4)})`);
               }
             }}
-          />
+          />}
         </div>
 
         {/* Floating Top Control Bar (Header & Step Switcher) */}

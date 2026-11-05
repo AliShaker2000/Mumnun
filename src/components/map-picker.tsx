@@ -4,7 +4,8 @@ import { getCurrentLocation, locationError } from "@/lib/location";
 import { lookupMapPlace } from "@/lib/maps.functions";
 import { Loader2, MapPin, Crosshair, Search, X, CheckCircle2, Maximize2, Minimize2 } from "lucide-react";
 import type { ProviderPin } from "@/lib/use-nearby-providers";
-import { isInGovernorate } from "@/lib/governorates";
+import { getGovernorate, isInGovernorate } from "@/lib/governorates";
+import { arabicWarning } from "@/lib/arabic-errors";
 
 type Coords = { lat: number; lng: number };
 
@@ -97,7 +98,7 @@ export function MapPicker({
       .then((g) => {
         clearTimeout(slow);
         if (cancelled || !containerRef.current) return;
-        const center = value ?? DEFAULT_CENTER;
+        const center = value ?? getGovernorate(governorateKey) ?? DEFAULT_CENTER;
         const map = new g.maps.Map(containerRef.current, {
           center,
           zoom: 14,
@@ -108,7 +109,6 @@ export function MapPicker({
         mapRef.current = map;
         // Don't report the default city centre as the user's location.
         if (!value) suppressIdleRef.current = true;
-        geocoderRef.current = new g.maps.Geocoder();
 
         const marker = new g.maps.Marker({
           position: center,
@@ -127,16 +127,8 @@ export function MapPicker({
               suppressIdleRef.current = false;
               return;
             }
-            geocoderRef.current?.geocode({ location: c }, (results: any, status: any) => {
-              if (status === "OK" && results?.[0]) {
-                const addr = results[0].formatted_address;
-                setAddress(addr);
-                report(c, addr);
-              } else {
-                report(c);
-                reverseFallback(c);
-              }
-            });
+            report(c);
+            reverseFallback(c);
           }, 300);
         });
 
@@ -146,16 +138,8 @@ export function MapPicker({
           marker.setPosition(e.latLng);
           map.panTo(e.latLng);
           suppressIdleRef.current = false;
-          geocoderRef.current?.geocode({ location: c }, (results: any, status: any) => {
-            if (status === "OK" && results?.[0]) {
-              const addr = results[0].formatted_address;
-              setAddress(addr);
-              report(c, addr);
-            } else {
-              report(c);
-              reverseFallback(c);
-            }
-          });
+          report(c);
+          reverseFallback(c);
         });
 
         map.addListener("idle", () => {
@@ -169,16 +153,8 @@ export function MapPicker({
           marker.setPosition(center);
           if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
           idleTimerRef.current = setTimeout(() => {
-            geocoderRef.current?.geocode({ location: c }, (results: any, status: any) => {
-              if (status === "OK" && results?.[0]) {
-                const addr = results[0].formatted_address;
-                setAddress(addr);
-                report(c, addr);
-              } else {
-                report(c);
-                reverseFallback(c);
-              }
-            });
+            report(c);
+            reverseFallback(c);
           }, 500);
         });
 
@@ -276,6 +252,11 @@ export function MapPicker({
     setGeoError(null);
     getCurrentLocation(navigator.geolocation)
       .then((c) => {
+        if (governorateKey && !isInGovernorate(c, governorateKey)) {
+          setLocating(false);
+          setGeoError(`موقعك الحالي خارج ${getGovernorate(governorateKey)?.name ?? "المحافظة المختارة"}؛ حدد الموقع داخل المحافظة المختارة`);
+          return;
+        }
         setSharedOk(true);
         setLocating(false);
         if (mapRef.current) {
@@ -285,17 +266,6 @@ export function MapPicker({
         }
         report(c);
         reverseFallback(c);
-        try {
-          geocoderRef.current?.geocode({ location: c }, (results: any, status: any) => {
-            if (status === "OK" && results?.[0]) {
-              const addr = results[0].formatted_address;
-              setAddress(addr);
-              report(c, addr);
-            }
-          });
-        } catch {
-          /* address optional */
-        }
       })
       .catch((err) => {
         setLocating(false);
@@ -323,7 +293,7 @@ export function MapPicker({
       const center = mapRef.current?.getCenter?.();
       const c = center
         ? { lat: typeof center.lat === "function" ? center.lat() : center.lat, lng: typeof center.lng === "function" ? center.lng() : center.lng }
-        : value ?? DEFAULT_CENTER;
+        : value ?? getGovernorate(governorateKey) ?? DEFAULT_CENTER;
       try {
         const res: any = await lookupMapPlace({ data: { action: "autocomplete", input: q, sessionToken: sessionTokenRef.current, center: c, governorateKey } });
         if (stale) return;
@@ -339,7 +309,7 @@ export function MapPicker({
       } catch (e) {
         if (!stale) {
           setSuggestions([]);
-          setGeoError(e instanceof Error ? e.message : "تعذّر البحث عن الأماكن؛ أعد المحاولة");
+          setGeoError(arabicWarning(e));
         }
       }
     }, 350);

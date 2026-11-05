@@ -1,6 +1,14 @@
 const CACHE_NAME = "mumnun-v1";
 const STATIC_ASSETS = ["/", "/manifest.json", "/favicon.ico"];
 
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const path = event.notification.data?.url || "/home";
+  const target = new URL(path, self.location.origin);
+  if (target.origin !== self.location.origin) return;
+  event.waitUntil(clients.openWindow(target.href));
+});
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
