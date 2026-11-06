@@ -6,8 +6,8 @@ describe("400 IQD per actual driving kilometer", () => {
     expect(taxiFare(category, 10)).toBe(4000);
   });
   it("has no minimum or base fare", () => {
-    expect(taxiFare("economy", 1)).toBe(500);
-    expect(taxiFare("economy", 0.5)).toBe(250);
+    expect(taxiFare("economy", 1)).toBe(1000);
+    expect(taxiFare("economy", 0.5)).toBe(1000);
   });
   it("rounds to the nearest 250 IQD", () => {
     expect(taxiFare("economy", 8.501)).toBe(3500);
@@ -21,5 +21,11 @@ describe("400 IQD per actual driving kilometer", () => {
   });
   it("rejects unavailable distances", () => {
     expect(() => taxiFare("economy", NaN)).toThrow();
+  });
+});
+
+describe("minimum fare", () => {
+  it("never charges less than 1000 IQD", () => {
+    expect(taxiFare("economy", 0)).toBe(1000);
   });
 });

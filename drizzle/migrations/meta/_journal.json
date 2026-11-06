@@ -36,6 +36,13 @@
       "when": 1793927400692,
       "tag": "0004_round_taxi_price_250",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793927583568,
+      "tag": "0005_taxi_min_fare_1000",
+      "breakpoints": true
     }
   ]
 }
