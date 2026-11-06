@@ -44,6 +44,14 @@ function SupportCenter() {
   const [reply, setReply] = useState("");
   const [busy, setBusy] = useState(false);
   const [loadingTickets, setLoadingTickets] = useState(true);
+  const supportScrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      const el = supportScrollRef.current;
+      if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [messages.length, selected?.id]);
 
   useEffect(() => {
     if (!session) return;
