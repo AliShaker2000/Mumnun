@@ -1,5 +1,5 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Headphones, Plus, MessageSquare, Send } from "lucide-react";
@@ -44,6 +44,14 @@ function SupportCenter() {
   const [reply, setReply] = useState("");
   const [busy, setBusy] = useState(false);
   const [loadingTickets, setLoadingTickets] = useState(true);
+  const supportScrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      const el = supportScrollRef.current;
+      if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [messages.length, selected?.id]);
 
   useEffect(() => {
     if (!session) return;
@@ -159,7 +167,7 @@ function SupportCenter() {
             </span>
           </div>
 
-          <div className="space-y-2 mb-4 max-h-96 overflow-y-auto">
+          <div ref={supportScrollRef} className="space-y-2 mb-4 max-h-96 overflow-y-auto">
             {messages.map((m) => (
               <div key={m.id} className={`flex ${m.sender_id === session.user.id ? "justify-end" : "justify-start"}`}>
                 <div className={`glass rounded-2xl px-3 py-2 max-w-[80%] text-sm ${m.is_staff ? "border-2 border-primary/20" : ""}`}>

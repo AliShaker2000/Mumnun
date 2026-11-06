@@ -29,6 +29,13 @@
       "when": 1793821558216,
       "tag": "0003_timed_taxi_dispatch",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793927400692,
+      "tag": "0004_round_taxi_price_250",
+      "breakpoints": true
     }
   ]
 }

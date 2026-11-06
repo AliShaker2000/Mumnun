@@ -1694,6 +1694,7 @@ export type Database = {
       lookup_email_by_phone: { Args: { _phone: string }; Returns: string }
       process_taxi_dispatch: { Args: never; Returns: undefined }
       reject_request_offer: { Args: { _offer_id: string }; Returns: boolean }
+      round_to_250: { Args: { n: number }; Returns: number }
       search_profile_by_phone: {
         Args: { _phone: string }
         Returns: {
