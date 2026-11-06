@@ -135,9 +135,11 @@ function RequestDetail() {
   }, [req?.id, req?.status, myRole]);
 
   useEffect(() => {
-    const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [messages.length, chat?.id]);
+    const go = () => { const el = scrollRef.current; if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" }); };
+    const raf = requestAnimationFrame(go);
+    const t = setTimeout(go, 350);
+    return () => { cancelAnimationFrame(raf); clearTimeout(t); };
+  }, [messages.length, messages[messages.length - 1]?.id, chat?.id, req?.status, loading]);
 
   if (authLoading || loading) return <div className="min-h-screen grid place-items-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   if (!session) return <Navigate to="/auth" />;
@@ -348,7 +350,7 @@ function RequestDetail() {
             </span>
           </div>
 
-          <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-3 space-y-2.5 scroll-smooth max-h-[420px]">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-3 space-y-2.5 max-h-[420px]">
             {messages.length === 0 && (
               <div className="text-center text-xs text-muted-foreground py-8">
                 ابدأ المحادثة 👋 (يتم التنبيه بصوت عند وصول أي رسالة)
