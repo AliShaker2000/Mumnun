@@ -41,6 +41,8 @@ export const ROAD_RATES: Record<RoadCondition, { extra: number; label: string; i
   congested: { extra: 750, label: "طريق مزدحم وساعات ذروة", icon: "🟡" },
 };
 
+export const MIN_TAXI_FARE = 1000;
+
 export function roundTo250(n: number): number {
   return Math.round(n / 250) * 250;
 }
@@ -61,7 +63,7 @@ export function calculateFareBreakdown(
 
   const distanceFare = t.perKm * km;
   const subtotal = distanceFare;
-  const finalTotal = roundTo250(subtotal);
+  const finalTotal = Math.max(MIN_TAXI_FARE, roundTo250(subtotal));
 
   return {
     category,
