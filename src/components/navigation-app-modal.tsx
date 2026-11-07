@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X, Navigation, ExternalLink, MapPin, Check, Copy } from "lucide-react";
 import { toast } from "@/lib/toast";
+import { Button } from "@/components/ui/button";
 
 export interface NavigationTarget {
   lat: number;
@@ -28,13 +29,17 @@ export function NavigationAppModal({
   );
   const [copied, setCopied] = useState(false);
 
+  useEffect(() => {
+    if (isOpen) setTargetType(defaultTarget === "dest" && destination ? "dest" : pickup ? "pickup" : "dest");
+  }, [isOpen, defaultTarget, !!pickup, !!destination]);
+
   if (!isOpen) return null;
 
   const current = targetType === "pickup" ? pickup : destination;
   const coords = current ? { lat: current.lat, lng: current.lng } : null;
   const label = current?.label || (targetType === "pickup" ? "موقع الانطلاق" : "وجهة الوصول");
 
-  function openApp(app: "darbouna" | "google" | "waze" | "native") {
+  function openApp(app: "google" | "waze" | "native") {
     if (!coords) {
       toast.error("إحداثيات الموقع غير متوفرة");
       return;
@@ -43,25 +48,6 @@ export function NavigationAppModal({
     const { lat, lng } = coords;
 
     switch (app) {
-      case "darbouna": {
-        // Iraqi Darbouna navigation app: attempt protocol, fallback to web/intent
-        const darbounaScheme = `darbouna://navigate?lat=${lat}&lng=${lng}&title=${encodeURIComponent(label)}`;
-        const fallbackWeb = `https://darbouna.iq/navigate?lat=${lat}&lng=${lng}`;
-        const geoUri = `geo:${lat},${lng}?q=${lat},${lng}(${encodeURIComponent(label)})`;
-
-        // Create temporary hidden anchor or open protocol
-        const start = Date.now();
-        window.location.href = darbounaScheme;
-        setTimeout(() => {
-          if (Date.now() - start < 1500) {
-            // App might not be installed, open geo/web
-            window.open(geoUri, "_blank");
-          }
-        }, 800);
-        toast.success("جاري فتح تطبيق دربونة العراقي 🇮🇶");
-        break;
-      }
-
       case "google": {
         const googleUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
         window.open(googleUrl, "_blank");
@@ -106,24 +92,24 @@ export function NavigationAppModal({
               <Navigation className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-base font-black">اختر تطبيق الملاحة</h2>
+              <h2 className="text-base font-black">ملاحة</h2>
               <p className="text-[11px] text-muted-foreground">للوصول السريع إلى العميل أو الوجهة</p>
             </div>
           </div>
-          <button
+          <Button
             type="button"
             onClick={onClose}
             className="h-8 w-8 rounded-full bg-slate-100 hover:bg-slate-200 grid place-items-center text-muted-foreground btn-press"
             aria-label="إغلاق"
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
 
         {/* Target Switcher: Pickup vs Destination (if both provided) */}
         {pickup && destination && (
           <div className="mt-3 grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-2xl">
-            <button
+            <Button
               type="button"
               onClick={() => setTargetType("pickup")}
               className={`py-2 px-3 rounded-xl text-xs font-bold transition-all btn-press flex items-center justify-center gap-1.5 ${
@@ -134,8 +120,8 @@ export function NavigationAppModal({
             >
               <MapPin className="h-3.5 w-3.5" />
               <span>موقع العميل (الانطلاق)</span>
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={() => setTargetType("dest")}
               className={`py-2 px-3 rounded-xl text-xs font-bold transition-all btn-press flex items-center justify-center gap-1.5 ${
@@ -146,7 +132,7 @@ export function NavigationAppModal({
             >
               <MapPin className="h-3.5 w-3.5" />
               <span>وجهة الوصول</span>
-            </button>
+            </Button>
           </div>
         )}
 
@@ -157,44 +143,21 @@ export function NavigationAppModal({
             <div className="font-bold text-foreground truncate">{label}</div>
           </div>
           {coords && (
-            <button
+            <Button
               type="button"
               onClick={copyCoordinates}
               className="text-[11px] font-bold text-primary flex items-center gap-1 bg-white px-2.5 py-1.5 rounded-xl border border-border/40 shadow-sm hover:bg-slate-50"
             >
               {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
               <span>{copied ? "تم النسخ" : "نسخ الموقع"}</span>
-            </button>
+            </Button>
           )}
         </div>
 
         {/* Navigation Apps Grid */}
         <div className="mt-4 space-y-2.5">
-          {/* 1. Darbouna 🇮🇶 */}
-          <button
-            type="button"
-            onClick={() => openApp("darbouna")}
-            className="w-full p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-white hover:from-emerald-100/70 border border-emerald-200/80 shadow-sm flex items-center gap-3 text-right btn-press transition-all group"
-          >
-            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white font-black text-2xl grid place-items-center shadow-md shrink-0">
-              🇮🇶
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="font-black text-sm text-foreground">تطبيق دربونة (Darbouna)</span>
-                <span className="text-[9px] bg-emerald-600 text-white px-1.5 py-0.5 rounded-full font-bold">
-                  عراقي 100%
-                </span>
-              </div>
-              <div className="text-[11px] text-emerald-800/80 mt-0.5">
-                تطبيق الملاحة العراقي الجديد — دقة عالية في الأزقة والشوارع الفرعية
-              </div>
-            </div>
-            <ExternalLink className="h-4 w-4 text-emerald-600 shrink-0 opacity-60 group-hover:opacity-100" />
-          </button>
-
           {/* 2. Google Maps */}
-          <button
+          <Button
             type="button"
             onClick={() => openApp("google")}
             className="w-full p-3.5 rounded-2xl bg-white hover:bg-slate-50 border border-border/70 shadow-sm flex items-center gap-3 text-right btn-press transition-all group"
@@ -209,10 +172,10 @@ export function NavigationAppModal({
               </div>
             </div>
             <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0 opacity-60 group-hover:opacity-100" />
-          </button>
+          </Button>
 
           {/* 3. Waze */}
-          <button
+          <Button
             type="button"
             onClick={() => openApp("waze")}
             className="w-full p-3.5 rounded-2xl bg-white hover:bg-slate-50 border border-border/70 shadow-sm flex items-center gap-3 text-right btn-press transition-all group"
@@ -227,10 +190,10 @@ export function NavigationAppModal({
               </div>
             </div>
             <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0 opacity-60 group-hover:opacity-100" />
-          </button>
+          </Button>
 
           {/* 4. Native / Device Maps */}
-          <button
+          <Button
             type="button"
             onClick={() => openApp("native")}
             className="w-full p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-border/60 flex items-center gap-3 text-right btn-press transition-all"
@@ -242,7 +205,7 @@ export function NavigationAppModal({
               <div className="font-bold text-xs text-foreground">تطبيق الخرائط الافتراضي للجهاز</div>
               <div className="text-[10px] text-muted-foreground">فتح عبر التطبيق الافتراضي لهاتفك</div>
             </div>
-          </button>
+          </Button>
         </div>
       </div>
     </div>
