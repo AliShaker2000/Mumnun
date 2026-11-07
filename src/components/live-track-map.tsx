@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { Button } from "@/components/ui/button";
 import { loadGoogleMaps } from "@/lib/google-maps";
 import { Loader2, Navigation, Maximize2, Minimize2, Compass, MapPin } from "lucide-react";
 import { toast } from "@/lib/toast";
@@ -46,6 +48,8 @@ export interface LiveTrackMapProps {
   height?: number;
   follow?: boolean;
   onOpenNavigation?: () => void;
+  fullscreen?: boolean;
+  onClose?: () => void;
 }
 
 export function LiveTrackMap({
@@ -62,6 +66,8 @@ export function LiveTrackMap({
   height = 280,
   follow = true,
   onOpenNavigation,
+  fullscreen = false,
+  onClose,
 }: LiveTrackMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
@@ -74,55 +80,25 @@ export function LiveTrackMap({
   const didInitialFitRef = useRef(false);
   const arrivedNotifiedRef = useRef(false);
 
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(fullscreen);
+  const [mapReady, setMapReady] = useState(false);
+  const [mapError, setMapError] = useState(false);
   const [distanceKm, setDistanceKm] = useState<number | null>(null);
   const [etaMinutes, setEtaMinutes] = useState<number | null>(null);
 
-  // Simulated progression if other driver coordinates aren't arriving yet in preview/test:
-  const [simulatedDriver, setSimulatedDriver] = useState<Coords | null>(null);
+  const effectivePickup: Coords | null = pickupCoords ?? (myRole === "customer" ? me : other);
+  const activeDriverCoord: Coords | null = myRole === "provider" ? me : other;
 
-  // Resolve target pickup coordinate
-  const effectivePickup: Coords | null =
-    pickupCoords ?? (myRole === "customer" ? me : null) ?? { lat: 33.3152, lng: 44.3661 };
-
-  // Resolve effective driver coordinate: either real broadcast coordinate, or simulated approach
   useEffect(() => {
-    if (other && other.lat && other.lng) {
-      setSimulatedDriver(null);
-      return;
-    }
-    // If we have an active ride (accepted) and no real driver location yet, simulate a driver approaching pickup
-    if ((status === "accepted" || status === "in_progress") && effectivePickup) {
-      const startLat = effectivePickup.lat + 0.012; // ~1.3km north-east
-      const startLng = effectivePickup.lng + 0.011;
-      const initial: Coords = {
-        lat: startLat,
-        lng: startLng,
-        heading: bearingDeg({ lat: startLat, lng: startLng }, effectivePickup),
-      };
-      setSimulatedDriver(initial);
-
-      let step = 0;
-      const totalSteps = 60;
-      const interval = setInterval(() => {
-        step = Math.min(step + 1, totalSteps);
-        const ratio = step / totalSteps;
-        // Ease towards pickup
-        const currLat = startLat + (effectivePickup.lat - startLat) * (ratio * 0.92);
-        const currLng = startLng + (effectivePickup.lng - startLng) * (ratio * 0.92);
-        const currentCoord: Coords = {
-          lat: currLat,
-          lng: currLng,
-          heading: bearingDeg({ lat: currLat, lng: currLng }, effectivePickup),
-        };
-        setSimulatedDriver(currentCoord);
-      }, 3500);
-
-      return () => clearInterval(interval);
-    }
-  }, [other?.lat, other?.lng, status, effectivePickup?.lat, effectivePickup?.lng]);
-
-  const activeDriverCoord: Coords | null = other ?? simulatedDriver;
+    if (!isFullscreen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const close = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { setIsFullscreen(false); onClose?.(); }
+    };
+    window.addEventListener("keydown", close);
+    return () => { document.body.style.overflow = previous; window.removeEventListener("keydown", close); };
+  }, [isFullscreen, onClose]);
 
   // Initialize Map
   useEffect(() => {
@@ -139,8 +115,9 @@ export function LiveTrackMap({
       });
       mapRef.current = map;
       readyRef.current = true;
+      setMapReady(true);
       syncMapElements(false);
-    });
+    }).catch(() => { if (!cancelled) setMapError(true); });
 
     return () => {
       cancelled = true;
@@ -276,7 +253,7 @@ export function LiveTrackMap({
       // Check arrival threshold (< 70m)
       if (dist < 0.07 && !arrivedNotifiedRef.current) {
         arrivedNotifiedRef.current = true;
-        toast.success("الكابتن وصل إلى موقعك الآن! 🚗");
+        if (myRole === "customer") toast.success("الكابتن وصل إلى موقعك الآن! 🚗");
       }
     }
 
@@ -339,25 +316,25 @@ export function LiveTrackMap({
     }
   }
 
-  return (
+  const content = (
     <div
       className={`relative overflow-hidden transition-all duration-300 ${
         isFullscreen
-          ? "fixed inset-0 z-50 rounded-none bg-slate-900"
+          ? "fixed inset-0 z-[80] rounded-none bg-background"
           : "rounded-3xl border border-border shadow-md"
       }`}
       style={{ height: isFullscreen ? "100dvh" : height }}
     >
       {/* Map canvas */}
-      <div ref={containerRef} className="absolute inset-0 z-0" style={{ background: "#e5edf5" }} />
+      <div ref={containerRef} className="absolute inset-0 z-0 bg-muted" />
 
       {/* Top Floating Status & ETA Card */}
-      <div className="absolute top-3 inset-x-3 z-10 flex items-center justify-between pointer-events-none">
+      <div className="absolute top-3 inset-x-3 z-10 flex flex-wrap gap-2 items-center justify-between pointer-events-none">
         <div className="bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-2xl shadow-lg border border-border/40 pointer-events-auto flex items-center gap-2.5">
           <div className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse shrink-0" />
           <div className="text-right">
             <div className="text-xs font-black flex items-center gap-1.5 text-foreground">
-              <span>{status === "in_progress" ? "في الطريق إلى الوجهة" : "الكابتن متجه إليك"}</span>
+              <span>{!activeDriverCoord ? "بانتظار مشاركة الموقع" : status === "in_progress" ? "في الطريق إلى الوجهة" : myRole === "provider" ? "موقع العميل" : "الكابتن متجه إليك"}</span>
               {etaMinutes != null && (
                 <span className="text-primary font-black">· ~{etaMinutes} دقيقة</span>
               )}
@@ -372,7 +349,7 @@ export function LiveTrackMap({
 
         {/* Map View Controls */}
         <div className="flex items-center gap-2 pointer-events-auto">
-          <button
+          <Button
             type="button"
             onClick={centerOnDriver}
             className="h-10 w-10 rounded-2xl bg-white shadow-lg grid place-items-center btn-press border border-border/40 text-emerald-600"
@@ -380,8 +357,8 @@ export function LiveTrackMap({
             aria-label="موقع الكابتن"
           >
             <Navigation className="h-4 w-4" />
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={centerOnPickup}
             className="h-10 w-10 rounded-2xl bg-white shadow-lg grid place-items-center btn-press border border-border/40 text-sky-600"
@@ -389,19 +366,19 @@ export function LiveTrackMap({
             aria-label="نقطة الركوب"
           >
             <MapPin className="h-4 w-4" />
-          </button>
-          {onOpenNavigation && (
-            <button
+          </Button>
+          {myRole === "provider" && onOpenNavigation && (
+            <Button
               type="button"
               onClick={onOpenNavigation}
               className="h-10 px-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg flex items-center justify-center gap-1 btn-press border border-emerald-500 text-[10px] font-black"
-              title="فتح في تطبيق الملاحة (دربونة / Google / Waze)"
-              aria-label="فتح في تطبيق الملاحة"
+              title="ملاحة"
+              aria-label="ملاحة"
             >
-              <span>دربونة 🇮🇶</span>
-            </button>
+              <span>ملاحة</span>
+            </Button>
           )}
-          <button
+          <Button
             type="button"
             onClick={recenterBounds}
             className="h-10 w-10 rounded-2xl bg-white shadow-lg grid place-items-center btn-press border border-border/40 text-muted-foreground"
@@ -409,11 +386,12 @@ export function LiveTrackMap({
             aria-label="إعادة ضبط الرؤية"
           >
             <Compass className="h-4 w-4" />
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={() => {
-              setIsFullscreen((f) => !f);
+              if (isFullscreen && onClose) onClose();
+              else setIsFullscreen((f) => !f);
               setTimeout(() => window.dispatchEvent(new Event("resize")), 100);
             }}
             className="h-10 w-10 rounded-2xl bg-white shadow-lg grid place-items-center btn-press border border-border/40 text-foreground"
@@ -421,12 +399,12 @@ export function LiveTrackMap({
             aria-label={isFullscreen ? "تصغير" : "شاشة كاملة"}
           >
             {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Bottom Floating Legend & Progress */}
-      <div className="absolute bottom-3 inset-x-3 z-10 flex items-center justify-between pointer-events-none">
+      <div className="absolute bottom-3 inset-x-3 z-10 flex flex-wrap gap-2 items-center justify-between pointer-events-none">
         <div className="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-2xl shadow-lg border border-border/40 pointer-events-auto flex items-center gap-3 text-[11px] font-bold">
           <span className="flex items-center gap-1.5 text-sky-700">
             <span className="h-2.5 w-2.5 rounded-full bg-sky-500 ring-2 ring-sky-200" />
@@ -445,24 +423,26 @@ export function LiveTrackMap({
         </div>
 
         {isFullscreen && (
-          <button
+          <Button
             type="button"
             onClick={() => {
               setIsFullscreen(false);
+              onClose?.();
               setTimeout(() => window.dispatchEvent(new Event("resize")), 100);
             }}
             className="pointer-events-auto px-4 py-2 rounded-2xl bg-primary text-primary-foreground text-xs font-bold shadow-lg btn-press"
           >
             العودة للتفاصيل
-          </button>
+          </Button>
         )}
       </div>
 
-      {!readyRef.current && (
+      {!mapReady && (
         <div className="absolute inset-0 grid place-items-center bg-white/70 z-20">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          {mapError ? <div className="text-center text-sm text-foreground space-y-3"><p>تعذّر تحميل الخريطة؛ تحقق من الاتصال وأعد المحاولة.</p><Button onClick={() => { if (onClose) onClose(); else window.location.reload(); }}>العودة</Button></div> : <Loader2 className="h-6 w-6 animate-spin text-primary" />}
         </div>
       )}
     </div>
   );
+  return isFullscreen ? createPortal(content, document.body) : content;
 }

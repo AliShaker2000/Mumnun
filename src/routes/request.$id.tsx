@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
-import { Phone, Send, Loader2, CheckCircle2, Clock, Star, X, Navigation } from "lucide-react";
+import { Phone, Send, Loader2, CheckCircle2, Clock, Star, X, Navigation, MapPin } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { LiveTrackMap } from "@/components/live-track-map";
 import { useLiveTracking } from "@/lib/use-live-tracking";
@@ -14,6 +14,7 @@ import { getReputation, type ReputationData } from "@/lib/reputation.functions";
 import { ReputationBadge } from "@/components/reputation";
 import { playMessageSound } from "@/lib/click-sound";
 import { NavigationAppModal } from "@/components/navigation-app-modal";
+import { Button } from "@/components/ui/button";
 
 
 const VEHICLE_CAT_META: Record<string, { label: string; emoji: string; gradient: string }> = {
@@ -46,6 +47,7 @@ function RequestDetail() {
   const [showRating, setShowRating] = useState(false);
   const [showCancel, setShowCancel] = useState(false);
   const [navModalOpen, setNavModalOpen] = useState(false);
+  const [mapOpen, setMapOpen] = useState(false);
   const [otherRep, setOtherRep] = useState<ReputationData | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const getRepFn = useServerFn(getReputation);
@@ -146,12 +148,12 @@ function RequestDetail() {
   if (!req) return <div className="p-8 text-center">الطلب غير موجود</div>;
 
   async function send() {
-    if (!draft.trim() || !chat) return;
+    if (!draft.trim() || !chat || !session) return;
     const text = draft.trim();
     setDraft("");
     playMessageSound(false);
     const { error } = await supabase.from("messages").insert({
-      chat_id: chat.id, sender_id: session!.user.id, content: text,
+      chat_id: chat.id, sender_id: session.user.id, content: text,
     });
     if (error) toast.error(error.message);
   }
@@ -222,12 +224,12 @@ function RequestDetail() {
           </div>
         )}
 
-        {trackingActive && (
+        {trackingActive && (myRole === "provider" || mapOpen) && (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs font-bold text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Navigation className="h-3.5 w-3.5 text-primary animate-pulse" />
-                <span>تتبع الكابتن المباشر نحو نقطة الانطلاق</span>
+                <span>{myRole === "customer" ? "موقع السائق" : "موقع العميل"}</span>
               </div>
               <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200 font-bold">
                 مباشر GPS
@@ -245,21 +247,22 @@ function RequestDetail() {
               driverPhone={other?.phone}
               vehicleCategory={req.vehicle_category}
               height={280}
-              onOpenNavigation={() => setNavModalOpen(true)}
+              fullscreen={mapOpen}
+              onClose={() => setMapOpen(false)}
+              onOpenNavigation={myRole === "provider" ? () => setNavModalOpen(true) : undefined}
             />
           </div>
         )}
 
-        {/* External Navigation Button (Darbouna 🇮🇶 / Google Maps / Waze) */}
-        {(req.pickup_lat != null || req.dest_lat != null) && (
-          <button
-            type="button"
-            onClick={() => setNavModalOpen(true)}
-            className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 text-white font-black text-xs shadow-lg shadow-emerald-700/20 flex items-center justify-center gap-2 btn-press"
-          >
-            <Navigation className="h-4 w-4" />
-            <span>الملاحة عبر دربونة 🇮🇶 أو خرائط Google أو Waze</span>
-          </button>
+        {trackingActive && myRole === "customer" && (
+          <Button variant="outline" className="w-full h-12" onClick={() => setMapOpen(true)}>
+            <MapPin className="h-4 w-4" /> رؤية موقع {req.type === "taxi" ? "السائق" : "الفني"}
+          </Button>
+        )}
+        {myRole === "provider" && (req.pickup_lat != null || req.dest_lat != null) && (
+          <Button className="w-full h-12" onClick={() => setNavModalOpen(true)}>
+            <Navigation className="h-4 w-4" /> ملاحة
+          </Button>
         )}
 
         <div className="glass rounded-2xl p-4 text-sm space-y-2">
@@ -394,10 +397,10 @@ function RequestDetail() {
               role={myRole}
               type={req.type as "taxi" | "service"}
               onPick={async (text) => {
-                if (!chat) return;
+                if (!chat || !session) return;
                 playMessageSound(false);
                 const { error } = await supabase.from("messages").insert({
-                  chat_id: chat.id, sender_id: session!.user.id, content: text,
+                  chat_id: chat.id, sender_id: session.user.id, content: text,
                 });
                 if (error) toast.error(error.message);
               }}
@@ -478,7 +481,7 @@ function RequestDetail() {
         />
       )}
 
-      <NavigationAppModal
+      {myRole === "provider" && <NavigationAppModal
         isOpen={navModalOpen}
         onClose={() => setNavModalOpen(false)}
         pickup={
@@ -491,8 +494,8 @@ function RequestDetail() {
             ? { lat: Number(req.dest_lat), lng: Number(req.dest_lng), label: req.dest_text || "وجهة الوصول" }
             : null
         }
-        defaultTarget={myRole === "provider" && req?.status === "accepted" ? "pickup" : "dest"}
-      />
+        defaultTarget={req?.status === "accepted" ? "pickup" : "dest"}
+      />}
     </div>
   );
 }
