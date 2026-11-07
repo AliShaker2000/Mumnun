@@ -103,6 +103,8 @@ export function LiveTrackMap({
   // Initialize Map
   useEffect(() => {
     let cancelled = false;
+    setMapReady(false);
+    setMapError(false);
     loadGoogleMaps().then((g) => {
       if (cancelled || !containerRef.current || !g) return;
       const initialCenter = effectivePickup ?? activeDriverCoord ?? { lat: 33.3152, lng: 44.3661 };
@@ -131,7 +133,7 @@ export function LiveTrackMap({
       mapRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isFullscreen]);
 
   // Update Markers and Polyline
   function syncMapElements(animate: boolean) {
@@ -318,10 +320,10 @@ export function LiveTrackMap({
 
   const content = (
     <div
-      className={`relative overflow-hidden transition-all duration-300 ${
+      className={`overflow-hidden transition-all duration-300 ${
         isFullscreen
           ? "fixed inset-0 z-[80] rounded-none bg-background"
-          : "rounded-3xl border border-border shadow-md"
+          : "relative rounded-3xl border border-border shadow-md"
       }`}
       style={{ height: isFullscreen ? "100dvh" : height }}
     >
