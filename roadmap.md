@@ -1,4 +1,6 @@
 # Tasks
+- [ ] Remove customer navigation, offer optional full-screen location viewing, and simplify navigation labels.
+- [ ] Diagnose and verify page-loading failure.
 - [x] Ensure pickup search names the selected governorate, including Najaf, and double technician reach only.
 - [x] Make all warning messages Arabic only.
 - [x] Price all taxi categories at exactly 400 IQD per real driving kilometer, without base/minimum surcharges.
