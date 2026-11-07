@@ -20,3 +20,4 @@
 - Taxi prices and submission require a confirmed destination and successful Google driving-route distance; unavailable routes must never receive approximate or minimum-only placeholder prices.
 - Taxi dispatch is database-triggered and uses a bounded timed queue with wake-on-enqueue and unschedule-on-drain, so expiry and widening work when client screens are closed; acceptance validates pending offers and their deadlines atomically.
 - Route warning and error toasts through the shared Arabic translator; never display raw provider or database error text to users.
+- Full-screen live maps render through a body portal with explicit close controls; this avoids parent layout clipping, and navigation actions stay in provider views only.
