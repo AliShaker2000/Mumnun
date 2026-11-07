@@ -2,6 +2,9 @@ import { createFileRoute, useNavigate, Navigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useGoBack } from "@/components/back-button";
 import luxuryCar from "@/assets/car-luxury.png";
+import gardenerIcon from "@/assets/service-gardener.png";
+import kiaDriverIcon from "@/assets/service-kia-driver.png";
+import internetIcon from "@/assets/service-internet.png";
 import { GOVERNORATES, GOV_STORAGE_KEY, getGovernorate, isInGovernorate } from "@/lib/governorates";
 import { Button } from "@/components/ui/button";
 import { z } from "zod";
@@ -46,7 +49,10 @@ export const Route = createFileRoute("/request/new")({
 
 type Service = { id: string; slug: string; name_ar: string };
 
-const SERVICE_VISUALS: Record<string, { emoji: string; gradient: string }> = {
+const SERVICE_VISUALS: Record<string, { emoji: string; gradient: string; img?: string }> = {
+  gardener:         { emoji: "", gradient: "from-primary to-primary-glow", img: gardenerIcon },
+  kia_driver:       { emoji: "", gradient: "from-primary to-primary-glow", img: kiaDriverIcon },
+  internet_install: { emoji: "", gradient: "from-primary to-primary-glow", img: internetIcon },
   build:            { emoji: "🧱", gradient: "from-orange-400 to-red-500" },
   plaster:          { emoji: "🪣", gradient: "from-amber-400 to-orange-500" },
   carpentry_form:   { emoji: "📐", gradient: "from-yellow-400 to-amber-600" },
@@ -599,6 +605,7 @@ function NewRequest() {
      2. HOME SERVICE VIEW: CLASSIC CLEAN SERVICE FORM
      ========================================================================= */
   const selectedService = services.find((s) => s.id === serviceId);
+  const selectedVisual = selectedService ? SERVICE_VISUALS[selectedService.slug] ?? DEFAULT_VISUAL : null;
 
   return (
     <div className="min-h-screen px-5 pt-10 pb-36">
@@ -618,27 +625,29 @@ function NewRequest() {
           const v = SERVICE_VISUALS[s.slug] ?? DEFAULT_VISUAL;
           const active = serviceId === s.id;
           return (
-            <button
+            <Button
               key={s.id}
+              type="button"
+              variant="ghost"
               onClick={() => setServiceId(s.id)}
-              className={`relative flex flex-col items-center gap-2 p-3 rounded-2xl btn-press tap-highlight-none transition-all ${
+              className={`relative h-auto whitespace-normal flex flex-col items-center gap-2 p-3 rounded-2xl btn-press tap-highlight-none transition-all ${
                 active
-                  ? "bg-white ring-2 ring-primary shadow-lg scale-105"
-                  : "bg-white/70 hover:bg-white"
+                  ? "bg-card ring-2 ring-primary shadow-lg scale-105"
+                  : "bg-card/70 hover:bg-card"
               }`}
             >
               {active && (
                 <CheckCircle2 className="absolute top-1.5 left-1.5 h-4 w-4 text-primary fill-white" />
               )}
               <div
-                className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${v.gradient} flex items-center justify-center text-2xl shadow-md`}
+                className={`h-14 w-14 shrink-0 flex items-center justify-center text-2xl ${v.img ? "" : `rounded-2xl bg-gradient-to-br ${v.gradient} shadow-md`}`}
               >
-                {v.emoji}
+                {v.img ? <img src={v.img} alt="" loading="lazy" width={56} height={56} className="h-14 w-14 object-contain" /> : v.emoji}
               </div>
               <div className="text-[11px] font-bold text-center leading-tight min-h-[28px]">
                 {s.name_ar}
               </div>
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -646,11 +655,9 @@ function NewRequest() {
       {selectedService && (
         <div className="glass rounded-2xl p-3 mb-5 flex items-center gap-3">
           <div
-            className={`h-10 w-10 rounded-xl bg-gradient-to-br ${
-              (SERVICE_VISUALS[selectedService.slug] ?? DEFAULT_VISUAL).gradient
-            } flex items-center justify-center text-xl`}
+            className={`h-10 w-10 shrink-0 flex items-center justify-center text-xl ${selectedVisual?.img ? "" : `rounded-xl bg-gradient-to-br ${selectedVisual?.gradient}`}`}
           >
-            {(SERVICE_VISUALS[selectedService.slug] ?? DEFAULT_VISUAL).emoji}
+            {selectedVisual?.img ? <img src={selectedVisual.img} alt="" loading="lazy" width={40} height={40} className="h-10 w-10 object-contain" /> : selectedVisual?.emoji}
           </div>
           <div className="text-sm font-bold">{selectedService.name_ar}</div>
         </div>
