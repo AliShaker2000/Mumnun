@@ -22,3 +22,4 @@
 - Taxi dispatch is database-triggered and uses a bounded timed queue with wake-on-enqueue and unschedule-on-drain, so expiry and widening work when client screens are closed; acceptance validates pending offers and their deadlines atomically.
 - Route warning and error toasts through the shared Arabic translator; never display raw provider or database error text to users.
 - Full-screen live maps render through a body portal with explicit close controls; this avoids parent layout clipping, and navigation actions stay in provider views only.
+- Never list `.env` in `.gitignore`: published builds read the public backend URL/key from the committed file, and ignoring it ships a client that cannot connect.
