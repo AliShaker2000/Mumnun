@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 # Architecture
+- Resolve technician service illustrations through the shared slug-to-asset registry with an illustrated fallback, so selection and summary displays stay consistent.
 - Database schema lives in `drizzle/migrations` (consolidated from the imported project); add changes as new migrations, never edit applied ones.
 - Admin/staff checks run in database functions (`has_staff_role`, `has_admin_access`, `is_super_admin`, `assert_staff`); server functions call them before using the privileged client, so never query `client.server` from route components.
 - User-linked tables reference `public.profiles(id)` so admin views can embed profile names via `<table>_<column>_fkey`.

@@ -2,9 +2,9 @@ import { createFileRoute, useNavigate, Navigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useGoBack } from "@/components/back-button";
 import luxuryCar from "@/assets/car-luxury.png";
-import gardenerIcon from "@/assets/service-gardener.png";
-import kiaDriverIcon from "@/assets/service-kia-driver.png";
-import internetIcon from "@/assets/service-internet.png";
+import { serviceIcon } from "@/lib/service-visuals";
+import technicianIcon from "@/assets/service-technician.png";
+import expertIcon from "@/assets/service-expert.png";
 import { GOVERNORATES, GOV_STORAGE_KEY, getGovernorate, isInGovernorate } from "@/lib/governorates";
 import { Button } from "@/components/ui/button";
 import { z } from "zod";
@@ -48,33 +48,6 @@ export const Route = createFileRoute("/request/new")({
 });
 
 type Service = { id: string; slug: string; name_ar: string };
-
-const SERVICE_VISUALS: Record<string, { emoji: string; gradient: string; img?: string }> = {
-  gardener:         { emoji: "", gradient: "from-primary to-primary-glow", img: gardenerIcon },
-  kia_driver:       { emoji: "", gradient: "from-primary to-primary-glow", img: kiaDriverIcon },
-  internet_install: { emoji: "", gradient: "from-primary to-primary-glow", img: internetIcon },
-  build:            { emoji: "🧱", gradient: "from-orange-400 to-red-500" },
-  plaster:          { emoji: "🪣", gradient: "from-amber-400 to-orange-500" },
-  carpentry_form:   { emoji: "📐", gradient: "from-yellow-400 to-amber-600" },
-  flooring:         { emoji: "🟫", gradient: "from-stone-400 to-stone-600" },
-  chef:             { emoji: "👨‍🍳", gradient: "from-rose-400 to-pink-600" },
-  plumbing:         { emoji: "🚰", gradient: "from-sky-400 to-blue-600" },
-  electric_setup:   { emoji: "💡", gradient: "from-yellow-300 to-amber-500" },
-  electric_street:  { emoji: "⚡", gradient: "from-yellow-400 to-orange-500" },
-  washer_repair:    { emoji: "🧺", gradient: "from-cyan-400 to-blue-500" },
-  stove_repair:     { emoji: "🔥", gradient: "from-orange-500 to-red-600" },
-  fridge_repair:    { emoji: "🧊", gradient: "from-cyan-300 to-sky-500" },
-  ac_repair:        { emoji: "❄️", gradient: "from-sky-300 to-cyan-500" },
-  cleaning:         { emoji: "✨", gradient: "from-emerald-400 to-teal-500" },
-  wood_carpentry:   { emoji: "🪵", gradient: "from-amber-600 to-yellow-800" },
-  blacksmith:       { emoji: "⚒️", gradient: "from-slate-500 to-zinc-700" },
-  general:          { emoji: "🏠", gradient: "from-indigo-400 to-purple-500" },
-  goods_transport:  { emoji: "📦", gradient: "from-amber-500 to-orange-600" },
-  furniture_moving: { emoji: "🛋️", gradient: "from-fuchsia-400 to-pink-600" },
-  cargo_handling:   { emoji: "🚚", gradient: "from-blue-500 to-indigo-600" },
-};
-
-const DEFAULT_VISUAL = { emoji: "🛠️", gradient: "from-primary to-primary-glow" };
 
 const VEHICLE_CATS: { key: VehicleCategory; label: string; emoji: string; gradient: string; eta: string; desc: string; img?: string }[] = [
   { key: "economy", label: "ممنون اقتصادي", emoji: "🚗", gradient: "from-emerald-400 to-teal-500", eta: "3-5 د", desc: "توفير وسرعة في الوصول" },
@@ -605,7 +578,6 @@ function NewRequest() {
      2. HOME SERVICE VIEW: CLASSIC CLEAN SERVICE FORM
      ========================================================================= */
   const selectedService = services.find((s) => s.id === serviceId);
-  const selectedVisual = selectedService ? SERVICE_VISUALS[selectedService.slug] ?? DEFAULT_VISUAL : null;
 
   return (
     <div className="min-h-screen px-5 pt-10 pb-36">
@@ -615,14 +587,13 @@ function NewRequest() {
       >
         رجوع
       </button>
-      <h1 className="text-3xl font-black">🛠️ طلب خدمة منزلية</h1>
+      <h1 className="text-3xl font-black flex items-center gap-2"><img src={technicianIcon} alt="" width={40} height={40} className="h-10 w-10 object-contain" />طلب خدمة منزلية</h1>
       <p className="text-sm text-muted-foreground mt-1">اختر الحرفة وحدد موقع العمل بسهولة</p>
 
       {/* Services Grid */}
       <div className="mt-6 mb-3 text-sm font-bold text-muted-foreground">اختر الخدمة</div>
       <div className="grid grid-cols-3 gap-3 mb-6">
         {services.map((s) => {
-          const v = SERVICE_VISUALS[s.slug] ?? DEFAULT_VISUAL;
           const active = serviceId === s.id;
           return (
             <Button
@@ -637,12 +608,12 @@ function NewRequest() {
               }`}
             >
               {active && (
-                <CheckCircle2 className="absolute top-1.5 left-1.5 h-4 w-4 text-primary fill-white" />
+                <CheckCircle2 className="absolute top-1.5 left-1.5 h-4 w-4 text-primary fill-card" />
               )}
               <div
-                className={`h-14 w-14 shrink-0 flex items-center justify-center text-2xl ${v.img ? "" : `rounded-2xl bg-gradient-to-br ${v.gradient} shadow-md`}`}
+                className="h-14 w-14 shrink-0 flex items-center justify-center"
               >
-                {v.img ? <img src={v.img} alt="" loading="lazy" width={56} height={56} className="h-14 w-14 object-contain" /> : v.emoji}
+                <img src={serviceIcon(s.slug)} alt="" loading="lazy" width={56} height={56} className="h-14 w-14 object-contain" />
               </div>
               <div className="text-[11px] font-bold text-center leading-tight min-h-[28px]">
                 {s.name_ar}
@@ -655,9 +626,9 @@ function NewRequest() {
       {selectedService && (
         <div className="glass rounded-2xl p-3 mb-5 flex items-center gap-3">
           <div
-            className={`h-10 w-10 shrink-0 flex items-center justify-center text-xl ${selectedVisual?.img ? "" : `rounded-xl bg-gradient-to-br ${selectedVisual?.gradient}`}`}
+            className="h-10 w-10 shrink-0 flex items-center justify-center"
           >
-            {selectedVisual?.img ? <img src={selectedVisual.img} alt="" loading="lazy" width={40} height={40} className="h-10 w-10 object-contain" /> : selectedVisual?.emoji}
+            <img src={serviceIcon(selectedService.slug)} alt="" loading="lazy" width={40} height={40} className="h-10 w-10 object-contain" />
           </div>
           <div className="text-sm font-bold">{selectedService.name_ar}</div>
         </div>
@@ -668,8 +639,8 @@ function NewRequest() {
       <div className="grid grid-cols-2 gap-3 mb-5">
         {(
           [
-            { k: "fani", label: "فني", emoji: "🔧", desc: "خبرة جيدة" },
-            { k: "khabir", label: "خبير", emoji: "⭐", desc: "خبرة عالية" },
+            { k: "fani", label: "فني", img: technicianIcon, desc: "خبرة جيدة" },
+            { k: "khabir", label: "خبير", img: expertIcon, desc: "خبرة عالية" },
           ] as const
         ).map((opt) => (
           <button
@@ -681,7 +652,7 @@ function NewRequest() {
                 : "bg-white/70"
             }`}
           >
-            <div className="text-2xl mb-1">{opt.emoji}</div>
+            <img src={opt.img} alt="" loading="lazy" width={40} height={40} className="h-10 w-10 mx-auto mb-1 object-contain" />
             <div className="font-black text-sm">{opt.label}</div>
             <div
               className={`text-[10px] mt-0.5 ${level === opt.k ? "opacity-90" : "text-muted-foreground"}`}
