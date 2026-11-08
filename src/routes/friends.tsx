@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { getFriendsStatuses, searchProfileByPhone, type FriendStatus } from "@/lib/friends.functions";
+import {
+  getFriendsStatuses,
+  searchProfileByPhone,
+  type FriendStatus,
+} from "@/lib/friends.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,7 +62,10 @@ function Friends() {
   }, [loadFriends]);
 
   async function doSearch() {
-    if (!search.trim()) { setResults([]); return; }
+    if (!search.trim()) {
+      setResults([]);
+      return;
+    }
     setSearching(true);
     try {
       const rows = await searchProfilesFn({ data: { phone: search.trim() } });
@@ -129,16 +136,11 @@ function Friends() {
           {!searching && results.length > 0 && (
             <div className="space-y-2">
               {results.map((r) => (
-                <div
-                  key={r.id}
-                  className="flex items-center justify-between rounded-lg border p-3"
-                >
+                <div key={r.id} className="flex items-center justify-between rounded-lg border p-3">
                   <div className="flex items-center gap-3">
                     <Avatar>
                       <AvatarImage src={r.avatar_url ?? undefined} />
-                      <AvatarFallback>
-                        {r.full_name?.[0]?.toUpperCase() ?? "?"}
-                      </AvatarFallback>
+                      <AvatarFallback>{r.full_name?.[0]?.toUpperCase() ?? "?"}</AvatarFallback>
                     </Avatar>
                     <div>
                       <p className="font-medium">{r.full_name ?? "Unknown"}</p>
@@ -190,9 +192,7 @@ function Friends() {
                   <div className="flex items-center gap-3">
                     <Avatar>
                       <AvatarImage src={f.avatar_url ?? undefined} />
-                      <AvatarFallback>
-                        {f.full_name?.[0]?.toUpperCase() ?? "?"}
-                      </AvatarFallback>
+                      <AvatarFallback>{f.full_name?.[0]?.toUpperCase() ?? "?"}</AvatarFallback>
                     </Avatar>
                     <div>
                       <p className="font-medium">{f.full_name ?? "Unknown"}</p>

@@ -2,7 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import { loadGoogleMaps } from "@/lib/google-maps";
 import { getCurrentLocation, locationError } from "@/lib/location";
 import { lookupMapPlace } from "@/lib/maps.functions";
-import { Loader2, MapPin, Crosshair, Search, X, CheckCircle2, Maximize2, Minimize2 } from "lucide-react";
+import {
+  Loader2,
+  MapPin,
+  Crosshair,
+  Search,
+  X,
+  CheckCircle2,
+  Maximize2,
+  Minimize2,
+} from "lucide-react";
 import type { ProviderPin } from "@/lib/use-nearby-providers";
 import { getGovernorate, isInGovernorate } from "@/lib/governorates";
 import { arabicWarning } from "@/lib/arabic-errors";
@@ -60,7 +69,12 @@ export function MapPicker({
   };
   const reverseFallback = (c: Coords) => {
     lookupMapPlace({ data: { action: "reverse", center: c } })
-      .then((r: any) => { if (r?.address) { setAddress(r.address); onChangeRef.current(c, r.address); } })
+      .then((r: any) => {
+        if (r?.address) {
+          setAddress(r.address);
+          onChangeRef.current(c, r.address);
+        }
+      })
       .catch(() => {});
   };
   const containerRef = useRef<HTMLDivElement>(null);
@@ -77,12 +91,26 @@ export function MapPicker({
   const [sharedOk, setSharedOk] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<Array<{ id: string; text: string; secondary: string }>>([]);
+  const [suggestions, setSuggestions] = useState<
+    Array<{ id: string; text: string; secondary: string }>
+  >([]);
   const sessionTokenRef = useRef<any>(null);
   const acServiceRef = useRef<any>(null);
   const placesSvcRef = useRef<any>(null);
   const nearbyMarkersRef = useRef<
-    Map<string, { marker: any; anim: { from: Coords; to: Coords; startedAt: number; raf: number | null; heading: number } | null }>
+    Map<
+      string,
+      {
+        marker: any;
+        anim: {
+          from: Coords;
+          to: Coords;
+          startedAt: number;
+          raf: number | null;
+          heading: number;
+        } | null;
+      }
+    >
   >(new Map());
   const readyRef = useRef(false);
 
@@ -192,7 +220,9 @@ export function MapPicker({
           cancelAnimationFrame(existing.anim.raf ?? 0);
         }
         const from = existing.marker.getPosition?.();
-        const fromCoords: Coords = from ? { lat: from.lat(), lng: from.lng() } : { lat: pin.lat, lng: pin.lng };
+        const fromCoords: Coords = from
+          ? { lat: from.lat(), lng: from.lng() }
+          : { lat: pin.lat, lng: pin.lng };
         existing.anim = {
           from: fromCoords,
           to: { lat: pin.lat, lng: pin.lng },
@@ -205,8 +235,10 @@ export function MapPicker({
           const elapsed = Date.now() - existing.anim.startedAt;
           const t = Math.min(1, elapsed / 1000);
           const easeT = 1 - Math.pow(1 - t, 3);
-          const lat = existing.anim.from.lat + (existing.anim.to.lat - existing.anim.from.lat) * easeT;
-          const lng = existing.anim.from.lng + (existing.anim.to.lng - existing.anim.from.lng) * easeT;
+          const lat =
+            existing.anim.from.lat + (existing.anim.to.lat - existing.anim.from.lat) * easeT;
+          const lng =
+            existing.anim.from.lng + (existing.anim.to.lng - existing.anim.from.lng) * easeT;
           existing.marker.setPosition({ lat, lng });
           if (t < 1) {
             existing.anim.raf = requestAnimationFrame(animate);
@@ -254,7 +286,9 @@ export function MapPicker({
       .then((c) => {
         if (governorateKey && !isInGovernorate(c, governorateKey)) {
           setLocating(false);
-          setGeoError(`موقعك الحالي خارج ${getGovernorate(governorateKey)?.name ?? "المحافظة المختارة"}؛ حدد الموقع داخل المحافظة المختارة`);
+          setGeoError(
+            `موقعك الحالي خارج ${getGovernorate(governorateKey)?.name ?? "المحافظة المختارة"}؛ حدد الموقع داخل المحافظة المختارة`,
+          );
           return;
         }
         setSharedOk(true);
@@ -292,17 +326,31 @@ export function MapPicker({
       if (!sessionTokenRef.current) sessionTokenRef.current = crypto.randomUUID();
       const center = mapRef.current?.getCenter?.();
       const c = center
-        ? { lat: typeof center.lat === "function" ? center.lat() : center.lat, lng: typeof center.lng === "function" ? center.lng() : center.lng }
-        : value ?? getGovernorate(governorateKey) ?? DEFAULT_CENTER;
+        ? {
+            lat: typeof center.lat === "function" ? center.lat() : center.lat,
+            lng: typeof center.lng === "function" ? center.lng() : center.lng,
+          }
+        : (value ?? getGovernorate(governorateKey) ?? DEFAULT_CENTER);
       try {
-        const res: any = await lookupMapPlace({ data: { action: "autocomplete", input: q, sessionToken: sessionTokenRef.current, center: c, governorateKey } });
+        const res: any = await lookupMapPlace({
+          data: {
+            action: "autocomplete",
+            input: q,
+            sessionToken: sessionTokenRef.current,
+            center: c,
+            governorateKey,
+          },
+        });
         if (stale) return;
         if (res.suggestions?.length) {
-          setSuggestions(res.suggestions.map((s: any) => {
-            const id = "g:" + s.id;
-            if (s.coords) placeCacheRef.current.set(id, { coords: s.coords, address: s.address || s.text });
-            return { id, text: s.text, secondary: s.address || "" };
-          }));
+          setSuggestions(
+            res.suggestions.map((s: any) => {
+              const id = "g:" + s.id;
+              if (s.coords)
+                placeCacheRef.current.set(id, { coords: s.coords, address: s.address || s.text });
+              return { id, text: s.text, secondary: s.address || "" };
+            }),
+          );
           return;
         }
         setSuggestions([]);
@@ -323,7 +371,13 @@ export function MapPicker({
     let place = placeCacheRef.current.get(id);
     if (!place && id.startsWith("g:")) {
       try {
-        const res: any = await lookupMapPlace({ data: { action: "details", placeId: id.slice(2), sessionToken: sessionTokenRef.current ?? crypto.randomUUID() } });
+        const res: any = await lookupMapPlace({
+          data: {
+            action: "details",
+            placeId: id.slice(2),
+            sessionToken: sessionTokenRef.current ?? crypto.randomUUID(),
+          },
+        });
         place = { coords: res.coords, address: res.address || label };
       } catch {
         setGeoError("تعذّر فتح هذا المكان، جرّب مكان ثاني");
@@ -353,189 +407,225 @@ export function MapPicker({
 
   return (
     <>
-    <div
-      className={
-        isFullScreen
-          ? "absolute inset-0 w-full h-full overflow-hidden"
-          : full
-          ? "fixed inset-0 z-[60] overflow-hidden bg-background"
-          : "relative rounded-3xl overflow-hidden border border-border shadow-sm"
-      }
-      style={{ height: isFullScreen ? "100%" : full ? "100dvh" : height }}
-    >
-      <div ref={containerRef} className="absolute inset-0 z-0" style={{ background: "#e5edf5" }} />
+      <div
+        className={
+          isFullScreen
+            ? "absolute inset-0 w-full h-full overflow-hidden"
+            : full
+              ? "fixed inset-0 z-[60] overflow-hidden bg-background"
+              : "relative rounded-3xl overflow-hidden border border-border shadow-sm"
+        }
+        style={{ height: isFullScreen ? "100%" : full ? "100dvh" : height }}
+      >
+        <div
+          ref={containerRef}
+          className="absolute inset-0 z-0"
+          style={{ background: "#e5edf5" }}
+        />
 
-      {!loading && !error && (
-        <div className="absolute top-3 left-3 right-3 z-10" style={searchTop != null ? { top: searchTop } : undefined}>
-          <div className="flex items-center gap-2 bg-white rounded-2xl shadow-lg px-3 py-2">
-            <Search className="h-4 w-4 text-muted-foreground shrink-0" />
-            <input
-              ref={inputRef}
-              onFocus={() => setSearchOpen(true)}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={placeholder}
-              className="flex-1 bg-transparent outline-none text-sm font-medium min-w-0"
-            />
-            {searchOpen && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchOpen(false);
-                  setSuggestions([]);
-                  setSearchQuery("");
-                }}
-                className="text-muted-foreground"
-                aria-label="إغلاق"
-              >
-                <X className="h-4 w-4" />
-              </button>
+        {!loading && !error && (
+          <div
+            className="absolute top-3 left-3 right-3 z-10"
+            style={searchTop != null ? { top: searchTop } : undefined}
+          >
+            <div className="flex items-center gap-2 bg-white rounded-2xl shadow-lg px-3 py-2">
+              <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+              <input
+                ref={inputRef}
+                onFocus={() => setSearchOpen(true)}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={placeholder}
+                className="flex-1 bg-transparent outline-none text-sm font-medium min-w-0"
+              />
+              {searchOpen && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchOpen(false);
+                    setSuggestions([]);
+                    setSearchQuery("");
+                  }}
+                  className="text-muted-foreground"
+                  aria-label="إغلاق"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            {searchOpen && suggestions.length > 0 && (
+              <div className="mt-2 bg-white rounded-2xl shadow-lg overflow-hidden max-h-64 overflow-y-auto">
+                {suggestions.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => pickSuggestion(s.id, s.text)}
+                    className="w-full text-right px-3 py-2.5 border-b last:border-b-0 border-border/40 active:bg-muted flex items-start gap-2"
+                  >
+                    <MapPin className="h-4 w-4 mt-0.5 shrink-0" style={{ color: accent }} />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-bold truncate">{s.text}</div>
+                      {s.secondary && (
+                        <div className="text-[11px] text-muted-foreground truncate">
+                          {s.secondary}
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
             )}
           </div>
-          {searchOpen && suggestions.length > 0 && (
-            <div className="mt-2 bg-white rounded-2xl shadow-lg overflow-hidden max-h-64 overflow-y-auto">
-              {suggestions.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => pickSuggestion(s.id, s.text)}
-                  className="w-full text-right px-3 py-2.5 border-b last:border-b-0 border-border/40 active:bg-muted flex items-start gap-2"
-                >
-                  <MapPin className="h-4 w-4 mt-0.5 shrink-0" style={{ color: accent }} />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-bold truncate">{s.text}</div>
-                    {s.secondary && (
-                      <div className="text-[11px] text-muted-foreground truncate">{s.secondary}</div>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+        )}
 
-      {!loading && !error && (
-        <div className="pointer-events-none absolute inset-0 grid place-items-center z-[5]">
-          <div className="flex flex-col items-center -translate-y-3">
-            <div
-              className="h-10 w-10 rounded-full grid place-items-center shadow-xl animate-in zoom-in-50 duration-200 border-2 border-white ring-2 ring-black/10"
-              style={{ background: accent }}
-            >
-              <MapPin className="h-5 w-5 text-white" fill="white" />
+        {!loading && !error && (
+          <div className="pointer-events-none absolute inset-0 grid place-items-center z-[5]">
+            <div className="flex flex-col items-center -translate-y-3">
+              <div
+                className="h-10 w-10 rounded-full grid place-items-center shadow-xl animate-in zoom-in-50 duration-200 border-2 border-white ring-2 ring-black/10"
+                style={{ background: accent }}
+              >
+                <MapPin className="h-5 w-5 text-white" fill="white" />
+              </div>
+              <div className="h-2 w-3 rounded-full bg-black/40 -mt-0.5 shadow" />
             </div>
-            <div className="h-2 w-3 rounded-full bg-black/40 -mt-0.5 shadow" />
           </div>
-        </div>
-      )}
+        )}
 
-      {!loading && !error && address && !isFullScreen && (
-        <div className={`absolute ${full ? "bottom-24" : "bottom-3"} left-3 right-16 bg-white/95 backdrop-blur rounded-2xl px-3 py-2 shadow-lg z-10`}>
-          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">الموقع المحدد</div>
-          <div className="text-xs font-bold truncate">{address}</div>
-        </div>
-      )}
+        {!loading && !error && address && !isFullScreen && (
+          <div
+            className={`absolute ${full ? "bottom-24" : "bottom-3"} left-3 right-16 bg-white/95 backdrop-blur rounded-2xl px-3 py-2 shadow-lg z-10`}
+          >
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+              الموقع المحدد
+            </div>
+            <div className="text-xs font-bold truncate">{address}</div>
+          </div>
+        )}
 
-      {loading && (
-        <div className="absolute inset-0 grid place-items-center bg-white/60 z-20">
-          <Loader2 className="h-6 w-6 animate-spin" style={{ color: accent }} />
-        </div>
-      )}
-      {error && (
-        <div className="absolute inset-0 grid place-items-center text-center px-4 bg-white/80">
-          <div className="text-sm text-muted-foreground flex flex-col items-center gap-2">
-            <MapPin className="h-5 w-5" />
-            {error}
-            <button
-              type="button"
-              onClick={() => autoLocate()}
-              disabled={locating}
-              className="mt-2 px-5 py-3 rounded-2xl font-bold text-white shadow-lg flex items-center gap-2 disabled:opacity-70"
-              style={{ background: accent }}
-            >
-              {locating ? <Loader2 className="h-5 w-5 animate-spin" /> : <Crosshair className="h-5 w-5" />}
-              {sharedOk ? "تمت مشاركة موقعك ✓" : "شارك موقعي الحالي"}
+        {loading && (
+          <div className="absolute inset-0 grid place-items-center bg-white/60 z-20">
+            <Loader2 className="h-6 w-6 animate-spin" style={{ color: accent }} />
+          </div>
+        )}
+        {error && (
+          <div className="absolute inset-0 grid place-items-center text-center px-4 bg-white/80">
+            <div className="text-sm text-muted-foreground flex flex-col items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              {error}
+              <button
+                type="button"
+                onClick={() => autoLocate()}
+                disabled={locating}
+                className="mt-2 px-5 py-3 rounded-2xl font-bold text-white shadow-lg flex items-center gap-2 disabled:opacity-70"
+                style={{ background: accent }}
+              >
+                {locating ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <Crosshair className="h-5 w-5" />
+                )}
+                {sharedOk ? "تمت مشاركة موقعك ✓" : "شارك موقعي الحالي"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {geoError && (
+          <div className="absolute bottom-16 left-3 right-3 z-30 bg-destructive text-destructive-foreground rounded-2xl px-3 py-2 text-xs font-bold shadow-lg flex items-start gap-2">
+            <span className="flex-1">{geoError}</span>
+            <button type="button" onClick={() => setGeoError(null)} aria-label="إغلاق">
+              <X className="h-4 w-4" />
             </button>
           </div>
-        </div>
-      )}
+        )}
 
-      {geoError && (
-        <div className="absolute bottom-16 left-3 right-3 z-30 bg-destructive text-destructive-foreground rounded-2xl px-3 py-2 text-xs font-bold shadow-lg flex items-start gap-2">
-          <span className="flex-1">{geoError}</span>
-          <button type="button" onClick={() => setGeoError(null)} aria-label="إغلاق"><X className="h-4 w-4" /></button>
-        </div>
-      )}
-
-      {!isFullScreen && (
-        <button
-          type="button"
-          onClick={() => { setFull((f) => !f); setTimeout(() => window.dispatchEvent(new Event("resize")), 60); }}
-          className={`absolute ${full ? "bottom-40" : "bottom-16"} right-3 h-11 w-11 rounded-full bg-white shadow-lg grid place-items-center btn-press z-10`}
-          aria-label={full ? "تصغير الخريطة" : "خريطة بشاشة كاملة"}
-        >
-          {full ? <Minimize2 className="h-5 w-5" style={{ color: accent }} /> : <Maximize2 className="h-5 w-5" style={{ color: accent }} />}
-        </button>
-      )}
-
-      {full && onConfirm && !isFullScreen && (
-        <div className="absolute bottom-0 inset-x-0 p-4 z-30 bg-gradient-to-t from-background to-transparent">
+        {!isFullScreen && (
           <button
             type="button"
-            disabled={!value && !picked}
-            onClick={() => { setFull(false); onConfirm(); setTimeout(() => window.dispatchEvent(new Event("resize")), 60); }}
-            className="w-full h-14 rounded-2xl font-black text-base text-primary-foreground shadow-xl btn-press disabled:opacity-50"
-            style={{ background: accent }}
+            onClick={() => {
+              setFull((f) => !f);
+              setTimeout(() => window.dispatchEvent(new Event("resize")), 60);
+            }}
+            className={`absolute ${full ? "bottom-40" : "bottom-16"} right-3 h-11 w-11 rounded-full bg-white shadow-lg grid place-items-center btn-press z-10`}
+            aria-label={full ? "تصغير الخريطة" : "خريطة بشاشة كاملة"}
           >
-            {confirmLabel} ✓
+            {full ? (
+              <Minimize2 className="h-5 w-5" style={{ color: accent }} />
+            ) : (
+              <Maximize2 className="h-5 w-5" style={{ color: accent }} />
+            )}
           </button>
-        </div>
-      )}
+        )}
 
-      {!loading && !error && (
+        {full && onConfirm && !isFullScreen && (
+          <div className="absolute bottom-0 inset-x-0 p-4 z-30 bg-gradient-to-t from-background to-transparent">
+            <button
+              type="button"
+              disabled={!value && !picked}
+              onClick={() => {
+                setFull(false);
+                onConfirm();
+                setTimeout(() => window.dispatchEvent(new Event("resize")), 60);
+              }}
+              className="w-full h-14 rounded-2xl font-black text-base text-primary-foreground shadow-xl btn-press disabled:opacity-50"
+              style={{ background: accent }}
+            >
+              {confirmLabel} ✓
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && (
+          <button
+            type="button"
+            onClick={() => autoLocate()}
+            disabled={locating}
+            style={{ bottom: bottomOffset ? `${bottomOffset + 14}px` : undefined }}
+            className={`absolute ${bottomOffset ? "" : full ? "bottom-24" : "bottom-3"} right-3 h-12 w-12 rounded-full bg-white shadow-xl border border-border/40 grid place-items-center btn-press disabled:opacity-70 z-20`}
+            aria-label="موقعي الحالي"
+          >
+            {locating ? (
+              <Loader2 className="h-5 w-5 animate-spin" style={{ color: accent }} />
+            ) : (
+              <Crosshair className="h-5 w-5" style={{ color: accent }} />
+            )}
+          </button>
+        )}
+      </div>
+      {!hideOutsideButtons && !isFullScreen && onConfirm && (
+        <button
+          type="button"
+          disabled={!value && !picked}
+          onClick={onConfirm}
+          className="mt-3 w-full h-14 rounded-2xl font-black text-base shadow-lg flex items-center justify-center gap-2 btn-press disabled:opacity-50 bg-foreground text-background"
+        >
+          <CheckCircle2 className="h-5 w-5" /> {confirmLabel}
+        </button>
+      )}
+      {!hideOutsideButtons && !isFullScreen && showLocateButton && (
         <button
           type="button"
           onClick={() => autoLocate()}
           disabled={locating}
-          style={{ bottom: bottomOffset ? `${bottomOffset + 14}px` : undefined }}
-          className={`absolute ${bottomOffset ? "" : full ? "bottom-24" : "bottom-3"} right-3 h-12 w-12 rounded-full bg-white shadow-xl border border-border/40 grid place-items-center btn-press disabled:opacity-70 z-20`}
-          aria-label="موقعي الحالي"
+          className="mt-3 w-full h-14 rounded-2xl font-black text-base shadow-lg flex items-center justify-center gap-2 btn-press disabled:opacity-80 text-primary-foreground"
+          style={{ background: accent }}
         >
           {locating ? (
-            <Loader2 className="h-5 w-5 animate-spin" style={{ color: accent }} />
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" /> جاري تحديد موقعك...
+            </>
+          ) : sharedOk ? (
+            <>
+              <CheckCircle2 className="h-5 w-5" /> تم تحديد موقعك ✓ (اضغط للتحديث)
+            </>
           ) : (
-            <Crosshair className="h-5 w-5" style={{ color: accent }} />
+            <>
+              <Crosshair className="h-5 w-5" /> 📍 حدد موقعي الحالي تلقائياً
+            </>
           )}
         </button>
       )}
-    </div>
-    {!hideOutsideButtons && !isFullScreen && onConfirm && (
-      <button
-        type="button"
-        disabled={!value && !picked}
-        onClick={onConfirm}
-        className="mt-3 w-full h-14 rounded-2xl font-black text-base shadow-lg flex items-center justify-center gap-2 btn-press disabled:opacity-50 bg-foreground text-background"
-      >
-        <CheckCircle2 className="h-5 w-5" /> {confirmLabel}
-      </button>
-    )}
-    {!hideOutsideButtons && !isFullScreen && showLocateButton && (
-      <button
-        type="button"
-        onClick={() => autoLocate()}
-        disabled={locating}
-        className="mt-3 w-full h-14 rounded-2xl font-black text-base shadow-lg flex items-center justify-center gap-2 btn-press disabled:opacity-80 text-primary-foreground"
-        style={{ background: accent }}
-      >
-        {locating ? (
-          <><Loader2 className="h-5 w-5 animate-spin" /> جاري تحديد موقعك...</>
-        ) : sharedOk ? (
-          <><CheckCircle2 className="h-5 w-5" /> تم تحديد موقعك ✓ (اضغط للتحديث)</>
-        ) : (
-          <><Crosshair className="h-5 w-5" /> 📍 حدد موقعي الحالي تلقائياً</>
-        )}
-      </button>
-    )}
     </>
   );
 }

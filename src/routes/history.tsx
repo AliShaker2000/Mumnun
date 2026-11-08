@@ -5,15 +5,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { MobileShell } from "@/components/mobile-shell";
 import { ClipboardList } from "lucide-react";
 
-export const Route = createFileRoute("/history")({ ssr: false,
-  head: () => ({ meta: [
-    { title: "سجل الطلبات | ممنون" },
-    { name: "description", content: "تابع طلبات النقل والخدمات السابقة والنشطة في ممنون." },
-    { property: "og:title", content: "سجل الطلبات | ممنون" },
-    { property: "og:description", content: "تابع طلبات النقل والخدمات السابقة والنشطة في ممنون." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }), component: HistoryPage });
+export const Route = createFileRoute("/history")({
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "سجل الطلبات | ممنون" },
+      { name: "description", content: "تابع طلبات النقل والخدمات السابقة والنشطة في ممنون." },
+      { property: "og:title", content: "سجل الطلبات | ممنون" },
+      {
+        property: "og:description",
+        content: "تابع طلبات النقل والخدمات السابقة والنشطة في ممنون.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: HistoryPage,
+});
 
 function HistoryPage() {
   const { session, loading } = useAuth();
@@ -35,7 +43,11 @@ function HistoryPage() {
   if (!session) return <Navigate to="/auth" />;
 
   const filtered = items.filter((r) =>
-    tab === "all" ? true : tab === "active" ? ["pending", "searching", "accepted", "in_progress"].includes(r.status) : r.status === "completed"
+    tab === "all"
+      ? true
+      : tab === "active"
+        ? ["pending", "searching", "accepted", "in_progress"].includes(r.status)
+        : r.status === "completed",
   );
 
   return (
@@ -63,19 +75,38 @@ function HistoryPage() {
         ) : (
           <div className="space-y-2">
             {filtered.map((r) => (
-              <Link key={r.id} to="/request/$id" params={{ id: r.id }} className="glass rounded-2xl p-4 flex items-center gap-3 btn-press">
+              <Link
+                key={r.id}
+                to="/request/$id"
+                params={{ id: r.id }}
+                className="glass rounded-2xl p-4 flex items-center gap-3 btn-press"
+              >
                 <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary-glow grid place-items-center text-lg">
                   {r.type === "taxi" ? "🚕" : "🛠️"}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-bold text-sm truncate">{r.pickup_text || "—"}</div>
                   <div className="text-[11px] text-muted-foreground">
-                    {r.status === "pending" ? "بانتظار" : r.status === "searching" ? "بحث" : r.status === "accepted" ? "مقبول" : r.status === "in_progress" ? "قيد التنفيذ" : r.status === "completed" ? "مكتمل" : r.status === "cancelled" ? "ملغي" : r.status}
+                    {r.status === "pending"
+                      ? "بانتظار"
+                      : r.status === "searching"
+                        ? "بحث"
+                        : r.status === "accepted"
+                          ? "مقبول"
+                          : r.status === "in_progress"
+                            ? "قيد التنفيذ"
+                            : r.status === "completed"
+                              ? "مكتمل"
+                              : r.status === "cancelled"
+                                ? "ملغي"
+                                : r.status}
                   </div>
                 </div>
                 {r.price_estimate && (
                   <div className="text-left">
-                    <div className="font-black text-sm">{Number(r.price_estimate).toLocaleString()}</div>
+                    <div className="font-black text-sm">
+                      {Number(r.price_estimate).toLocaleString()}
+                    </div>
                     <div className="text-[10px] text-muted-foreground">د.ع</div>
                   </div>
                 )}

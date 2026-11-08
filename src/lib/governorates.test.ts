@@ -7,8 +7,10 @@ describe("governorateOf", () => {
     expect(getGovernorate("najaf")?.name).toBe("النجف");
     expect(getGovernorate("invalid")).toBeNull();
   });
-  it("places Karrada in Baghdad", () => expect(governorateOf({ lat: 33.3032, lng: 44.4218 }).key).toBe("baghdad"));
-  it("places Basra city in Basra", () => expect(governorateOf({ lat: 30.51, lng: 47.8 }).key).toBe("basra"));
+  it("places Karrada in Baghdad", () =>
+    expect(governorateOf({ lat: 33.3032, lng: 44.4218 }).key).toBe("baghdad"));
+  it("places Basra city in Basra", () =>
+    expect(governorateOf({ lat: 30.51, lng: 47.8 }).key).toBe("basra"));
   it("allows Najaf places when Najaf is selected", () => {
     expect(isInGovernorate({ lat: 32.0259, lng: 44.3462 }, "najaf")).toBe(true);
   });

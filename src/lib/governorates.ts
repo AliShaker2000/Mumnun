@@ -27,11 +27,24 @@ export const GOVERNORATES: Governorate[] = [
 export const GOV_STORAGE_KEY = "mamnoon_governorate";
 
 const boundaryNames: Record<string, string> = {
-  baghdad: "Baghdad", basra: "Al-Basrah", nineveh: "Ninawa", erbil: "Erbil",
-  sulaymaniyah: "Al-Sulaimaniyah", duhok: "Dohuk", kirkuk: "Kirkuk", najaf: "An-Najaf",
-  karbala: "Karbala", babil: "Babil", anbar: "Al-Anbar", diyala: "Diyala",
-  saladin: "Salah al-Din", wasit: "Wasit", dhiqar: "Dhi Qar", maysan: "Maysan",
-  muthanna: "Al-Muthanna", qadisiyah: "Al-Qadisiyah",
+  baghdad: "Baghdad",
+  basra: "Al-Basrah",
+  nineveh: "Ninawa",
+  erbil: "Erbil",
+  sulaymaniyah: "Al-Sulaimaniyah",
+  duhok: "Dohuk",
+  kirkuk: "Kirkuk",
+  najaf: "An-Najaf",
+  karbala: "Karbala",
+  babil: "Babil",
+  anbar: "Al-Anbar",
+  diyala: "Diyala",
+  saladin: "Salah al-Din",
+  wasit: "Wasit",
+  dhiqar: "Dhi Qar",
+  maysan: "Maysan",
+  muthanna: "Al-Muthanna",
+  qadisiyah: "Al-Qadisiyah",
 };
 
 export function isInGovernorate(p: { lat: number; lng: number }, key: string): boolean {
@@ -41,9 +54,14 @@ export function isInGovernorate(p: { lat: number; lng: number }, key: string): b
   function inside(ring: number[][]) {
     let hit = false;
     for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-      const a = ring[i], b = ring[j];
+      const a = ring[i],
+        b = ring[j];
       if (!a || !b) continue;
-      if ((a[1] > p.lat) !== (b[1] > p.lat) && p.lng < (b[0] - a[0]) * (p.lat - a[1]) / (b[1] - a[1]) + a[0]) hit = !hit;
+      if (
+        a[1] > p.lat !== b[1] > p.lat &&
+        p.lng < ((b[0] - a[0]) * (p.lat - a[1])) / (b[1] - a[1]) + a[0]
+      )
+        hit = !hit;
     }
     return hit;
   }
@@ -56,25 +74,38 @@ export function governorateBounds(key: string) {
   if (!feature) throw new Error("محافظة غير صالحة");
   const points = feature.geometry.coordinates.flat();
   return {
-    low: { latitude: Math.min(...points.map((p) => p[1])), longitude: Math.min(...points.map((p) => p[0])) },
-    high: { latitude: Math.max(...points.map((p) => p[1])), longitude: Math.max(...points.map((p) => p[0])) },
+    low: {
+      latitude: Math.min(...points.map((p) => p[1])),
+      longitude: Math.min(...points.map((p) => p[0])),
+    },
+    high: {
+      latitude: Math.max(...points.map((p) => p[1])),
+      longitude: Math.max(...points.map((p) => p[0])),
+    },
   };
 }
 
 function distKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
-  const R = 6371, r = Math.PI / 180;
-  const dLat = (b.lat - a.lat) * r, dLng = (b.lng - a.lng) * r;
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLng / 2) ** 2;
+  const R = 6371,
+    r = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * r,
+    dLng = (b.lng - a.lng) * r;
+  const h =
+    Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
 export function governorateOf(p: { lat: number; lng: number }): Governorate {
   const exact = GOVERNORATES.find((g) => isInGovernorate(p, g.key));
   if (exact) return exact;
-  let best = GOVERNORATES[0], bd = Infinity;
+  let best = GOVERNORATES[0],
+    bd = Infinity;
   for (const g of GOVERNORATES) {
     const d = distKm(p, g);
-    if (d < bd) { bd = d; best = g; }
+    if (d < bd) {
+      bd = d;
+      best = g;
+    }
   }
   return best;
 }

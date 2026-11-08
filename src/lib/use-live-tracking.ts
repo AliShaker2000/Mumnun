@@ -54,7 +54,7 @@ export function useLiveTracking(opts: {
           heading,
           updated_at: new Date().toISOString(),
         } as any,
-        { onConflict: "request_id,user_id" } as any
+        { onConflict: "request_id,user_id" } as any,
       )
       .then(({ error }: any) => {
         if (error) console.warn("[live-tracking] upsert error:", error.message);
@@ -65,12 +65,18 @@ export function useLiveTracking(opts: {
     if (!active || !navigator.geolocation) return;
     const id = navigator.geolocation.watchPosition(
       (pos) => {
-        const c = { lat: pos.coords.latitude, lng: pos.coords.longitude, heading: pos.coords.heading };
+        const c = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          heading: pos.coords.heading,
+        };
         setMe(c);
         push(c.lat, c.lng, c.heading ?? null);
       },
-      (err) => { console.warn("[live-tracking] geolocation error:", err.message); },
-      { enableHighAccuracy: true, maximumAge: 3000, timeout: 15000 }
+      (err) => {
+        console.warn("[live-tracking] geolocation error:", err.message);
+      },
+      { enableHighAccuracy: true, maximumAge: 3000, timeout: 15000 },
     );
     watchRef.current = id;
     return () => {
@@ -89,13 +95,18 @@ export function useLiveTracking(opts: {
       .channel(chName)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "live_locations", filter: `request_id=eq.${requestId}` },
+        {
+          event: "*",
+          schema: "public",
+          table: "live_locations",
+          filter: `request_id=eq.${requestId}`,
+        },
         (payload: any) => {
           const row = payload.new;
           if (row.user_id === otherUserId) {
             setOther({ lat: row.lat, lng: row.lng, heading: row.heading });
           }
-        }
+        },
       )
       .subscribe((status) => {
         if (status === "CHANNEL_ERROR") console.warn("[live-tracking] channel error");

@@ -17,7 +17,8 @@ export const grantProviderRole = createServerFn({ method: "POST" })
     });
     if (error) {
       console.error("[grantProviderRole]", error.message);
-      if (/driver_profile_required/.test(error.message)) throw new Error("أكمل بيانات السيارة أولاً");
+      if (/driver_profile_required/.test(error.message))
+        throw new Error("أكمل بيانات السيارة أولاً");
       if (/worker_profile_required/.test(error.message)) throw new Error("أكمل بيانات الفني أولاً");
       throw new Error("تعذّر تفعيل الدور، حاول مرة أخرى");
     }

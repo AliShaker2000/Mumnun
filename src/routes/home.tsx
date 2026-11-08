@@ -4,8 +4,18 @@ import { useAuth, type AppRole } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileShell } from "@/components/mobile-shell";
 import {
-  Car, Wrench, Power, Bell, Sun, Moon, Zap, ShieldCheck,
-  Sparkles, ArrowUpLeft, TrendingUp, Clock,
+  Car,
+  Wrench,
+  Power,
+  Bell,
+  Sun,
+  Moon,
+  Zap,
+  ShieldCheck,
+  Sparkles,
+  ArrowUpLeft,
+  TrendingUp,
+  Clock,
 } from "lucide-react";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { toast } from "@/lib/toast";
@@ -14,15 +24,20 @@ import { acceptServiceRequest } from "@/lib/dispatch.functions";
 import { useTheme } from "@/lib/use-theme";
 import { playClick } from "@/lib/click-sound";
 
-export const Route = createFileRoute("/home")({ ssr: false,
-  head: () => ({ meta: [
-    { title: "الرئيسية | ممنون" },
-    { name: "description", content: "اطلب تاكسي أو خدمات منزلية وتابع طلباتك في ممنون." },
-    { property: "og:title", content: "الرئيسية | ممنون" },
-    { property: "og:description", content: "اطلب تاكسي أو خدمات منزلية وتابع طلباتك في ممنون." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }), component: HomePage });
+export const Route = createFileRoute("/home")({
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "الرئيسية | ممنون" },
+      { name: "description", content: "اطلب تاكسي أو خدمات منزلية وتابع طلباتك في ممنون." },
+      { property: "og:title", content: "الرئيسية | ممنون" },
+      { property: "og:description", content: "اطلب تاكسي أو خدمات منزلية وتابع طلباتك في ممنون." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: HomePage,
+});
 
 function greetingByHour() {
   const h = new Date().getHours();
@@ -55,25 +70,37 @@ function HomePage() {
     <MobileShell>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-96 overflow-hidden">
         <div className="absolute -top-16 -right-16 h-72 w-72 rounded-full bg-primary/20 blur-3xl animate-float" />
-        <div className="absolute -top-10 -left-24 h-64 w-64 rounded-full bg-accent/20 blur-3xl animate-float" style={{ animationDelay: "-3s" }} />
+        <div
+          className="absolute -top-10 -left-24 h-64 w-64 rounded-full bg-accent/20 blur-3xl animate-float"
+          style={{ animationDelay: "-3s" }}
+        />
       </div>
 
       <div className="relative px-5 pt-10 pb-6">
         <div className="flex items-center justify-between mb-6 animate-pop-in">
           <div>
-            <div className="text-[11px] font-bold tracking-wider text-primary/80 uppercase">{greet}</div>
+            <div className="text-[11px] font-bold tracking-wider text-primary/80 uppercase">
+              {greet}
+            </div>
             <div className="text-2xl font-black leading-tight mt-0.5 text-foreground">
               {firstName} <span className="inline-block animate-float">👋</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => { playClick("toggle"); toggle(); }}
+              onClick={() => {
+                playClick("toggle");
+                toggle();
+              }}
               aria-label="تبديل الوضع"
               className="glass-strong h-11 w-11 rounded-2xl grid place-items-center btn-press tap-highlight-none relative overflow-hidden"
             >
-              <Sun className={`h-5 w-5 absolute transition-all duration-500 ${theme === "dark" ? "rotate-90 scale-0 opacity-0" : "rotate-0 scale-100 opacity-100"}`} />
-              <Moon className={`h-5 w-5 absolute transition-all duration-500 ${theme === "dark" ? "rotate-0 scale-100 opacity-100" : "-rotate-90 scale-0 opacity-0"}`} />
+              <Sun
+                className={`h-5 w-5 absolute transition-all duration-500 ${theme === "dark" ? "rotate-90 scale-0 opacity-0" : "rotate-0 scale-100 opacity-100"}`}
+              />
+              <Moon
+                className={`h-5 w-5 absolute transition-all duration-500 ${theme === "dark" ? "rotate-0 scale-100 opacity-100" : "-rotate-90 scale-0 opacity-0"}`}
+              />
             </button>
             <NotificationsBell />
           </div>
@@ -86,9 +113,15 @@ function HomePage() {
               return (
                 <button
                   key={r}
-                  onClick={() => { playClick("soft"); setActiveRole(r); localStorage.setItem("mumnun-active-role", r); }}
+                  onClick={() => {
+                    playClick("soft");
+                    setActiveRole(r);
+                    localStorage.setItem("mumnun-active-role", r);
+                  }}
                   className={`relative flex-1 py-2.5 rounded-xl btn-press tap-highlight-none transition-colors ${
-                    active ? "text-primary-foreground font-black" : "text-muted-foreground hover:text-foreground"
+                    active
+                      ? "text-primary-foreground font-black"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {active && (
@@ -121,23 +154,31 @@ function CustomerHome() {
           <div className="inline-flex items-center gap-1.5 rounded-full bg-white/20 backdrop-blur px-2.5 py-1 text-[10px] font-bold">
             <Sparkles className="h-3 w-3" /> مجاناً بلا عمولة
           </div>
-          <div className="text-2xl font-black mt-2 leading-tight">اطلب الآن، ادفع للمزوّد مباشرة</div>
-          <div className="text-xs opacity-90 mt-1">ممنون منصّة مجانية وسريعة — بدون أي نسبة على طلبك</div>
+          <div className="text-2xl font-black mt-2 leading-tight">
+            اطلب الآن، ادفع للمزوّد مباشرة
+          </div>
+          <div className="text-xs opacity-90 mt-1">
+            ممنون منصّة مجانية وسريعة — بدون أي نسبة على طلبك
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
         <QuickTile
-          to="/request/new" type="taxi"
-          title="طلب سيارة" subtitle="خلال دقائق"
+          to="/request/new"
+          type="taxi"
+          title="طلب سيارة"
+          subtitle="خلال دقائق"
           icon={<Car className="h-7 w-7" />}
           gradient="from-amber-500 to-orange-500"
           span={2}
           delay={0.05}
         />
         <QuickTile
-          to="/request/new" type="service"
-          title="طلب فني" subtitle="١٦ خدمة"
+          to="/request/new"
+          type="service"
+          title="طلب فني"
+          subtitle="١٦ خدمة"
           icon={<Wrench className="h-6 w-6" />}
           gradient="from-emerald-500 to-teal-400"
           delay={0.1}
@@ -174,10 +215,23 @@ function CustomerHome() {
 }
 
 function QuickTile({
-  to, type, title, subtitle, icon, gradient, span = 1, delay = 0,
+  to,
+  type,
+  title,
+  subtitle,
+  icon,
+  gradient,
+  span = 1,
+  delay = 0,
 }: {
-  to: string; type: "taxi" | "service"; title: string; subtitle: string;
-  icon: React.ReactNode; gradient: string; span?: 1 | 2; delay?: number;
+  to: string;
+  type: "taxi" | "service";
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  gradient: string;
+  span?: 1 | 2;
+  delay?: number;
 }) {
   return (
     <Link
@@ -189,14 +243,20 @@ function QuickTile({
       }`}
       style={{ animationDelay: `${delay}s` }}
     >
-      <div className={`absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-gradient-to-br ${gradient} opacity-20 blur-2xl group-hover:opacity-40 transition-opacity`} />
+      <div
+        className={`absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-gradient-to-br ${gradient} opacity-20 blur-2xl group-hover:opacity-40 transition-opacity`}
+      />
       <div className="relative flex flex-col h-full justify-between">
-        <div className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${gradient} grid place-items-center text-white shadow-lg`}>
+        <div
+          className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${gradient} grid place-items-center text-white shadow-lg`}
+        >
           {icon}
         </div>
         <div>
           <div className="flex items-center gap-1">
-            <div className="font-black text-base text-foreground group-hover:text-primary transition-colors">{title}</div>
+            <div className="font-black text-base text-foreground group-hover:text-primary transition-colors">
+              {title}
+            </div>
             <ArrowUpLeft className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
           </div>
           <div className="text-[11px] text-muted-foreground mt-0.5">{subtitle}</div>
@@ -217,11 +277,21 @@ function MiniStat({ icon, label, value }: { icon: React.ReactNode; label: string
 }
 
 function FeatureRow({
-  icon, title, desc, accent,
-}: { icon: React.ReactNode; title: string; desc: string; accent: string }) {
+  icon,
+  title,
+  desc,
+  accent,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+  accent: string;
+}) {
   return (
     <div className="glass rounded-2xl p-3.5 flex items-center gap-3 btn-press">
-      <div className={`h-11 w-11 rounded-xl bg-gradient-to-br ${accent} grid place-items-center text-white shadow-md`}>
+      <div
+        className={`h-11 w-11 rounded-xl bg-gradient-to-br ${accent} grid place-items-center text-white shadow-md`}
+      >
         {icon}
       </div>
       <div className="flex-1 min-w-0">
@@ -243,27 +313,42 @@ function ProviderHome({ type }: { type: "taxi" | "service" }) {
 
   useEffect(() => {
     if (!session) return;
-    supabase.from(table).select("*").eq("user_id", session.user.id).maybeSingle().then(({ data }) => {
-      if (data) {
-        setAvailable(data.available);
-        const d: any = data;
-        setStats({ jobs: d.completed_jobs ?? d.completed_rides ?? 0 });
-      }
-    });
+    supabase
+      .from(table)
+      .select("*")
+      .eq("user_id", session.user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setAvailable(data.available);
+          const d: any = data;
+          setStats({ jobs: d.completed_jobs ?? d.completed_rides ?? 0 });
+        }
+      });
 
     async function loadRequests() {
-      const { data } = await supabase.from("service_requests")
-        .select("id, pickup_text, dest_text, notes, created_at, service_id, type, price_estimate, customer_price, pricing_mode, work_hours, work_description")
-        .in("status", ["pending", "searching"]).eq("type", type)
-        .order("created_at", { ascending: false }).limit(20);
+      const { data } = await supabase
+        .from("service_requests")
+        .select(
+          "id, pickup_text, dest_text, notes, created_at, service_id, type, price_estimate, customer_price, pricing_mode, work_hours, work_description",
+        )
+        .in("status", ["pending", "searching"])
+        .eq("type", type)
+        .order("created_at", { ascending: false })
+        .limit(20);
       setRequests(data ?? []);
     }
     loadRequests();
 
-    const channel = supabase.channel("provider-requests")
-      .on("postgres_changes", { event: "*", schema: "public", table: "service_requests" }, () => loadRequests())
+    const channel = supabase
+      .channel("provider-requests")
+      .on("postgres_changes", { event: "*", schema: "public", table: "service_requests" }, () =>
+        loadRequests(),
+      )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [session, type, table]);
 
   async function toggleAvail() {
@@ -271,7 +356,10 @@ function ProviderHome({ type }: { type: "taxi" | "service" }) {
     const prev = available;
     const next = !prev;
     setAvailable(next);
-    const { error } = await supabase.from(table).update({ available: next }).eq("user_id", session!.user.id);
+    const { error } = await supabase
+      .from(table)
+      .update({ available: next })
+      .eq("user_id", session!.user.id);
     if (error) {
       setAvailable(prev);
       toast.error("تعذّر تحديث الحالة");
@@ -291,15 +379,17 @@ function ProviderHome({ type }: { type: "taxi" | "service" }) {
 
   return (
     <div className="space-y-4">
-      <div className={`relative rounded-3xl p-5 overflow-hidden animate-pop-in shadow-card ${
-        available
-          ? "bg-gradient-to-br from-emerald-500 to-teal-400 text-white"
-          : "glass"
-      }`}>
+      <div
+        className={`relative rounded-3xl p-5 overflow-hidden animate-pop-in shadow-card ${
+          available ? "bg-gradient-to-br from-emerald-500 to-teal-400 text-white" : "glass"
+        }`}
+      >
         {available && <div className="absolute inset-0 shine opacity-30 mix-blend-overlay" />}
         <div className="relative flex items-center justify-between">
           <div>
-            <div className={`text-xs ${available ? "text-white/80" : "text-muted-foreground"}`}>حالة التوفر</div>
+            <div className={`text-xs ${available ? "text-white/80" : "text-muted-foreground"}`}>
+              حالة التوفر
+            </div>
             <div className="font-black text-lg mt-0.5">{available ? "متاح للعمل" : "غير متاح"}</div>
           </div>
           <button
@@ -330,31 +420,56 @@ function ProviderHome({ type }: { type: "taxi" | "service" }) {
             لا توجد طلبات جديدة الآن
           </div>
         )}
-        {available && requests.map((r, i) => (
-          <div key={r.id} className="glass rounded-2xl p-4 mb-2.5 animate-pop-in" style={{ animationDelay: `${i * 0.04}s` }}>
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold truncate">📍 {r.pickup_text || "بدون عنوان"}</div>
-                {r.dest_text && <div className="text-xs text-muted-foreground mt-1 truncate">🎯 {r.dest_text}</div>}
-                {r.work_description && <div className="text-xs mt-1 line-clamp-2">🛠️ {r.work_description}</div>}
-                {(r.customer_price || r.price_estimate) && (
-                  <div className="text-sm font-black text-primary mt-1">
-                    💰 {(r.customer_price ?? r.price_estimate).toLocaleString()} د.ع
-                    {r.pricing_mode === "hourly" && r.work_hours ? ` · ${r.work_hours} ساعة` : r.pricing_mode === "fixed" ? " · إنجاز تام" : ""}
+        {available &&
+          requests.map((r, i) => (
+            <div
+              key={r.id}
+              className="glass rounded-2xl p-4 mb-2.5 animate-pop-in"
+              style={{ animationDelay: `${i * 0.04}s` }}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-bold truncate">
+                    📍 {r.pickup_text || "بدون عنوان"}
                   </div>
-                )}
-                {r.pricing_mode === "negotiable" && <div className="text-xs font-bold text-primary mt-1">💰 السعر يتفق عليه وياك</div>}
-                {r.notes && <div className="text-xs text-muted-foreground mt-1 line-clamp-2">📝 {r.notes}</div>}
+                  {r.dest_text && (
+                    <div className="text-xs text-muted-foreground mt-1 truncate">
+                      🎯 {r.dest_text}
+                    </div>
+                  )}
+                  {r.work_description && (
+                    <div className="text-xs mt-1 line-clamp-2">🛠️ {r.work_description}</div>
+                  )}
+                  {(r.customer_price || r.price_estimate) && (
+                    <div className="text-sm font-black text-primary mt-1">
+                      💰 {(r.customer_price ?? r.price_estimate).toLocaleString()} د.ع
+                      {r.pricing_mode === "hourly" && r.work_hours
+                        ? ` · ${r.work_hours} ساعة`
+                        : r.pricing_mode === "fixed"
+                          ? " · إنجاز تام"
+                          : ""}
+                    </div>
+                  )}
+                  {r.pricing_mode === "negotiable" && (
+                    <div className="text-xs font-bold text-primary mt-1">
+                      💰 السعر يتفق عليه وياك
+                    </div>
+                  )}
+                  {r.notes && (
+                    <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                      📝 {r.notes}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => accept(r.id)}
+                  className="shrink-0 px-4 py-2 rounded-xl bg-gradient-to-br from-primary to-primary-glow text-primary-foreground font-bold text-xs btn-press shadow-md"
+                >
+                  قبول
+                </button>
               </div>
-              <button
-                onClick={() => accept(r.id)}
-                className="shrink-0 px-4 py-2 rounded-xl bg-gradient-to-br from-primary to-primary-glow text-primary-foreground font-bold text-xs btn-press shadow-md"
-              >
-                قبول
-              </button>
             </div>
-          </div>
-        ))}
+          ))}
       </div>
     </div>
   );

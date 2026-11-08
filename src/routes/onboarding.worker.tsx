@@ -29,9 +29,15 @@ export const Route = createFileRoute("/onboarding/worker")({
   head: () => ({
     meta: [
       { title: "تسجيل الفني وتأكيد الهوية | ممنون" },
-      { name: "description", content: "سجل اختصاصاتك المهنية وأكد هويتك للانضمام إلى فنيي ممنون المعتمدين." },
+      {
+        name: "description",
+        content: "سجل اختصاصاتك المهنية وأكد هويتك للانضمام إلى فنيي ممنون المعتمدين.",
+      },
       { property: "og:title", content: "تسجيل الفني وتأكيد الهوية | ممنون" },
-      { property: "og:description", content: "سجل اختصاصاتك المهنية وأكد هويتك للانضمام إلى فنيي ممنون المعتمدين." },
+      {
+        property: "og:description",
+        content: "سجل اختصاصاتك المهنية وأكد هويتك للانضمام إلى فنيي ممنون المعتمدين.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -236,7 +242,11 @@ function OnboardingWorker() {
         >
           <Wrench className="h-4 w-4" />
           <span>١. المستوى والاختصاص</span>
-          {selected.size > 0 && <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-bold">{selected.size}</span>}
+          {selected.size > 0 && (
+            <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-bold">
+              {selected.size}
+            </span>
+          )}
         </button>
 
         <button
@@ -278,7 +288,9 @@ function OnboardingWorker() {
           </div>
 
           <div className="bg-white rounded-3xl p-4 border border-border/80 shadow-sm">
-            <div className="text-xs font-bold text-muted-foreground mb-2">نبذة عن خبرتك المهنية (اختياري)</div>
+            <div className="text-xs font-bold text-muted-foreground mb-2">
+              نبذة عن خبرتك المهنية (اختياري)
+            </div>
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
@@ -345,7 +357,8 @@ function OnboardingWorker() {
             <div>
               <div className="font-black text-sm">توثيق هوية الفني المعتمد</div>
               <div className="mt-0.5 leading-relaxed text-[11px] text-emerald-800">
-                لضمان مصداقية الفنيين وأمان المنازل، يتوجب إرفاق صورة حقيقية لوجهك وصورة لهويتك الرسمية، مع تطابق الاسم المكتوب.
+                لضمان مصداقية الفنيين وأمان المنازل، يتوجب إرفاق صورة حقيقية لوجهك وصورة لهويتك
+                الرسمية، مع تطابق الاسم المكتوب.
               </div>
             </div>
           </div>
@@ -370,7 +383,9 @@ function OnboardingWorker() {
                 <UserCheck className="h-5 w-5 text-primary" />
                 <span className="font-black text-sm">صورة الوجه الشخصية (تصوير حقيقي) *</span>
               </div>
-              {facePhoto && <span className="text-[11px] font-bold text-emerald-600">تم الإرفاق ✓</span>}
+              {facePhoto && (
+                <span className="text-[11px] font-bold text-emerald-600">تم الإرفاق ✓</span>
+              )}
             </div>
 
             <div className="flex items-center gap-4">
@@ -417,7 +432,9 @@ function OnboardingWorker() {
                 <FileText className="h-5 w-5 text-primary" />
                 <span className="font-black text-sm">صورة الهوية الوطنية أو هوية الأحوال *</span>
               </div>
-              {idCardPhoto && <span className="text-[11px] font-bold text-emerald-600">تم الإرفاق ✓</span>}
+              {idCardPhoto && (
+                <span className="text-[11px] font-bold text-emerald-600">تم الإرفاق ✓</span>
+              )}
             </div>
 
             <div className="flex items-center gap-4 pt-1">
@@ -464,7 +481,9 @@ function OnboardingWorker() {
                 className="mt-0.5 h-4 w-4 rounded accent-emerald-600"
               />
               <span className="font-bold text-emerald-950 leading-relaxed">
-                أؤكد بأن الاسم المكتوب أعلاه (<span className="text-primary">{legalName || "..."}</span>) يطابق تماماً الاسم في الهوية الرسمية المرفقة، وأتحمل كامل المسؤولية.
+                أؤكد بأن الاسم المكتوب أعلاه (
+                <span className="text-primary">{legalName || "..."}</span>) يطابق تماماً الاسم في
+                الهوية الرسمية المرفقة، وأتحمل كامل المسؤولية.
               </span>
             </label>
           </div>
@@ -511,7 +530,9 @@ function LevelCard({ active, onClick, icon, title, desc }: any) {
     >
       <div
         className={`h-10 w-10 rounded-xl grid place-items-center ${
-          active ? "bg-primary text-primary-foreground shadow" : "bg-slate-100 text-muted-foreground"
+          active
+            ? "bg-primary text-primary-foreground shadow"
+            : "bg-slate-100 text-muted-foreground"
         }`}
       >
         {icon}

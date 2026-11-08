@@ -12,7 +12,18 @@ import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
-import { Loader as Loader2, ArrowLeft, ArrowRight, MapPin, CircleCheck as CheckCircle2, User, Users, Compass, ChevronUp, ChevronDown } from "lucide-react";
+import {
+  Loader as Loader2,
+  ArrowLeft,
+  ArrowRight,
+  MapPin,
+  CircleCheck as CheckCircle2,
+  User,
+  Users,
+  Compass,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
 import { MapPicker } from "@/components/map-picker";
 import { dispatchRequest } from "@/lib/dispatch.functions";
 import { useNearbyProviders } from "@/lib/use-nearby-providers";
@@ -49,10 +60,40 @@ export const Route = createFileRoute("/request/new")({
 
 type Service = { id: string; slug: string; name_ar: string };
 
-const VEHICLE_CATS: { key: VehicleCategory; label: string; emoji: string; gradient: string; eta: string; desc: string; img?: string }[] = [
-  { key: "economy", label: "ممنون اقتصادي", emoji: "🚗", gradient: "from-emerald-400 to-teal-500", eta: "3-5 د", desc: "توفير وسرعة في الوصول" },
-  { key: "premium", label: "ممنون المتميز", emoji: "🚙", gradient: "from-sky-500 to-indigo-600", eta: "4-6 د", desc: "سيارة واسعة ومكيفة بالكامل" },
-  { key: "luxury",  label: "ممنون فاخر",   emoji: "🏎️", gradient: "from-amber-400 to-orange-500", eta: "5-8 د", desc: "أحدث الموديلات وراحة استثنائية", img: luxuryCar },
+const VEHICLE_CATS: {
+  key: VehicleCategory;
+  label: string;
+  emoji: string;
+  gradient: string;
+  eta: string;
+  desc: string;
+  img?: string;
+}[] = [
+  {
+    key: "economy",
+    label: "ممنون اقتصادي",
+    emoji: "🚗",
+    gradient: "from-emerald-400 to-teal-500",
+    eta: "3-5 د",
+    desc: "توفير وسرعة في الوصول",
+  },
+  {
+    key: "premium",
+    label: "ممنون المتميز",
+    emoji: "🚙",
+    gradient: "from-sky-500 to-indigo-600",
+    eta: "4-6 د",
+    desc: "سيارة واسعة ومكيفة بالكامل",
+  },
+  {
+    key: "luxury",
+    label: "ممنون فاخر",
+    emoji: "🏎️",
+    gradient: "from-amber-400 to-orange-500",
+    eta: "5-8 د",
+    desc: "أحدث الموديلات وراحة استثنائية",
+    img: luxuryCar,
+  },
 ];
 
 function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
@@ -84,7 +125,9 @@ function NewRequest() {
 
   // Taxi State
   const [vehicleCategory, setVehicleCategory] = useState<VehicleCategory>("economy");
-  const [weatherCondition, setWeatherCondition] = useState<WeatherCondition>(() => seasonalWeatherFallback());
+  const [weatherCondition, setWeatherCondition] = useState<WeatherCondition>(() =>
+    seasonalWeatherFallback(),
+  );
   const [roadCondition, setRoadCondition] = useState<RoadCondition>("normal");
   const [drawerExpanded, setDrawerExpanded] = useState(true);
   const [showFareDetails, setShowFareDetails] = useState(false);
@@ -153,16 +196,27 @@ function NewRequest() {
     const t = setTimeout(() => {
       runLookup({ data: { action: "route", from: pickupCoords, to: destCoords } })
         .then((r: any) => {
-          if (!stale && Number.isFinite(r?.distanceKm) && r.distanceKm >= 0) setRouteKm(r.distanceKm);
+          if (!stale && Number.isFinite(r?.distanceKm) && r.distanceKm >= 0)
+            setRouteKm(r.distanceKm);
         })
-        .catch((e) => { if (!stale) setRouteError(e instanceof Error ? e.message : "تعذّر حساب مسافة الطريق"); });
+        .catch((e) => {
+          if (!stale) setRouteError(e instanceof Error ? e.message : "تعذّر حساب مسافة الطريق");
+        });
     }, 400);
 
     return () => {
       stale = true;
       clearTimeout(t);
     };
-  }, [type, destConfirmed, pickupCoords?.lat, pickupCoords?.lng, destCoords?.lat, destCoords?.lng, routeRetry]);
+  }, [
+    type,
+    destConfirmed,
+    pickupCoords?.lat,
+    pickupCoords?.lng,
+    destCoords?.lat,
+    destCoords?.lng,
+    routeRetry,
+  ]);
 
   useEffect(() => {
     if (!pickupCoords) return;
@@ -316,89 +370,101 @@ function NewRequest() {
      1. TAXI VIEW: FULL-SCREEN INTERACTIVE MAP WITH AUTO TRANSITION & REAL PRICING
      ========================================================================= */
   if (type === "taxi") {
-    const currentBreakdown = calculateFareBreakdown(
-      vehicleCategory,
-      routeKm ?? 0,
-      { weather: "mild" as const, roadCondition }
-    );
+    const currentBreakdown = calculateFareBreakdown(vehicleCategory, routeKm ?? 0, {
+      weather: "mild" as const,
+      roadCondition,
+    });
 
     return (
       <div className="fixed inset-0 overflow-hidden flex flex-col bg-slate-900 select-none">
         {govReady && (!gov || govPickerOpen) && (
-          <div className="absolute inset-0 z-50 bg-background/95 backdrop-blur p-5 overflow-y-auto" dir="rtl">
+          <div
+            className="absolute inset-0 z-50 bg-background/95 backdrop-blur p-5 overflow-y-auto"
+            dir="rtl"
+          >
             <h2 className="text-xl font-black mb-1">اختر محافظتك</h2>
             <p className="text-sm text-muted-foreground mb-4">ستكون طلباتك داخل هذه المحافظة.</p>
             <div className="grid grid-cols-2 gap-2">
               {GOVERNORATES.map((g) => (
-                <button key={g.key} type="button" onClick={() => chooseGov(g.key)}
-                  className={`py-3 rounded-2xl border font-bold text-sm btn-press ${g.key === govKey ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
+                <button
+                  key={g.key}
+                  type="button"
+                  onClick={() => chooseGov(g.key)}
+                  className={`py-3 rounded-2xl border font-bold text-sm btn-press ${g.key === govKey ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}
+                >
                   {g.name}
                 </button>
               ))}
             </div>
             {gov && (
-              <button type="button" onClick={() => setGovPickerOpen(false)} className="mt-4 w-full py-3 text-sm text-muted-foreground">إلغاء</button>
+              <button
+                type="button"
+                onClick={() => setGovPickerOpen(false)}
+                className="mt-4 w-full py-3 text-sm text-muted-foreground"
+              >
+                إلغاء
+              </button>
             )}
           </div>
         )}
         {/* Full-Screen Real Map Canvas (Locked full screen like Baly) */}
         <div className="absolute inset-0 z-0">
-          {govReady && gov && <MapPicker
-            key={`${gov.key}-${mapStep}`}
-            value={mapStep === "pickup" ? pickupCoords : destCoords}
-            accent={mapStep === "pickup" ? "#0284c7" : "#e11d48"}
-            nearby={mapStep === "pickup" ? nearby : undefined}
-            nearbyKind="car"
-            autoLocateOnMount
-            governorateKey={gov?.key}
-            placeholder={
-              mapStep === "pickup"
-                ? `ابحث عن موقع الانطلاق في ${gov?.name ?? "محافظتك"}...`
-                : `ابحث عن وجهة الوصول في ${gov?.name ?? "محافظتك"}...`
-            }
-            showLocateButton={true}
-            isFullScreen={true}
-            searchTop={72}
-            hideOutsideButtons={true}
-            bottomOffset={mapStep === "dest" && destConfirmed ? 300 : 150}
-            confirmLabel={
-              mapStep === "pickup" ? "تأكيد الانطلاق" : "تأكيد الوجهة"
-            }
-            onSelectPlace={(c, addr) => {
-              if (mapStep === "pickup") {
-                setPickupCoords(c);
-                if (addr) setPickupLabel(addr);
-                if (gov && !isInGovernorate(c, gov.key)) {
-                  toast.error(`موقع الانطلاق يجب أن يكون داخل ${gov.name}`);
-                  return;
+          {govReady && gov && (
+            <MapPicker
+              key={`${gov.key}-${mapStep}`}
+              value={mapStep === "pickup" ? pickupCoords : destCoords}
+              accent={mapStep === "pickup" ? "#0284c7" : "#e11d48"}
+              nearby={mapStep === "pickup" ? nearby : undefined}
+              nearbyKind="car"
+              autoLocateOnMount
+              governorateKey={gov?.key}
+              placeholder={
+                mapStep === "pickup"
+                  ? `ابحث عن موقع الانطلاق في ${gov?.name ?? "محافظتك"}...`
+                  : `ابحث عن وجهة الوصول في ${gov?.name ?? "محافظتك"}...`
+              }
+              showLocateButton={true}
+              isFullScreen={true}
+              searchTop={72}
+              hideOutsideButtons={true}
+              bottomOffset={mapStep === "dest" && destConfirmed ? 300 : 150}
+              confirmLabel={mapStep === "pickup" ? "تأكيد الانطلاق" : "تأكيد الوجهة"}
+              onSelectPlace={(c, addr) => {
+                if (mapStep === "pickup") {
+                  setPickupCoords(c);
+                  if (addr) setPickupLabel(addr);
+                  if (gov && !isInGovernorate(c, gov.key)) {
+                    toast.error(`موقع الانطلاق يجب أن يكون داخل ${gov.name}`);
+                    return;
+                  }
+                  setMapStep("dest");
+                  setDestConfirmed(false);
+                } else {
+                  setDestCoords(c);
+                  if (addr) setDestLabel(addr);
+                  confirmDest(c);
                 }
-                setMapStep("dest");
+              }}
+              onConfirm={() => {
+                if (mapStep === "pickup") {
+                  advanceToDestination();
+                } else {
+                  confirmDest();
+                }
+              }}
+              onChange={(c, addr) => {
+                setRouteKm(null);
                 setDestConfirmed(false);
-              } else {
-                setDestCoords(c);
-                if (addr) setDestLabel(addr);
-                confirmDest(c);
-              }
-            }}
-            onConfirm={() => {
-              if (mapStep === "pickup") {
-                advanceToDestination();
-              } else {
-                confirmDest();
-              }
-            }}
-            onChange={(c, addr) => {
-              setRouteKm(null);
-              setDestConfirmed(false);
-              if (mapStep === "pickup") {
-                setPickupCoords(c);
-                setPickupLabel(addr ?? `موقعي (${c.lat.toFixed(4)}, ${c.lng.toFixed(4)})`);
-              } else {
-                setDestCoords(c);
-                setDestLabel(addr ?? `وجهتي (${c.lat.toFixed(4)}, ${c.lng.toFixed(4)})`);
-              }
-            }}
-          />}
+                if (mapStep === "pickup") {
+                  setPickupCoords(c);
+                  setPickupLabel(addr ?? `موقعي (${c.lat.toFixed(4)}, ${c.lng.toFixed(4)})`);
+                } else {
+                  setDestCoords(c);
+                  setDestLabel(addr ?? `وجهتي (${c.lat.toFixed(4)}, ${c.lng.toFixed(4)})`);
+                }
+              }}
+            />
+          )}
         </div>
 
         {/* Floating Top Control Bar (Header & Step Switcher) */}
@@ -424,7 +490,10 @@ function NewRequest() {
             <div className="flex-1 bg-white/95 backdrop-blur-md rounded-2xl p-1 shadow-lg border border-border/40 flex items-center gap-1">
               <button
                 type="button"
-                onClick={() => { setMapStep("pickup"); setDestConfirmed(false); }}
+                onClick={() => {
+                  setMapStep("pickup");
+                  setDestConfirmed(false);
+                }}
                 className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 btn-press ${
                   mapStep === "pickup"
                     ? "bg-sky-600 text-white shadow-md scale-[1.02]"
@@ -501,9 +570,15 @@ function NewRequest() {
               {interCity && (
                 <div className="flex gap-1.5 overflow-x-auto pb-1">
                   {GOVERNORATES.filter((g) => g.key !== gov?.key).map((g) => (
-                    <button key={g.key} type="button"
-                      onClick={() => { setDestCoords({ lat: g.lat, lng: g.lng }); setDestLabel(g.name); }}
-                      className="px-3 py-1.5 rounded-xl text-xs font-bold border border-border/60 shrink-0 btn-press">
+                    <button
+                      key={g.key}
+                      type="button"
+                      onClick={() => {
+                        setDestCoords({ lat: g.lat, lng: g.lng });
+                        setDestLabel(g.name);
+                      }}
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold border border-border/60 shrink-0 btn-press"
+                    >
                       {g.name}
                     </button>
                   ))}
@@ -526,22 +601,30 @@ function NewRequest() {
         {mapStep === "dest" && destConfirmed && (
           <div className="mt-auto relative z-30 bg-white rounded-t-[32px] shadow-2xl border-t border-border/60 max-w-lg mx-auto w-full p-5 space-y-3">
             {routeKm === null && !routeError && (
-              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground" role="status">
+              <div
+                className="flex items-center justify-center gap-2 text-sm text-muted-foreground"
+                role="status"
+              >
                 <Loader2 className="h-4 w-4 animate-spin" /> جارٍ حساب سعر الطريق…
               </div>
             )}
             {routeError && (
               <div className="space-y-2">
-                <p role="alert" className="text-sm text-destructive">{routeError}</p>
-                <Button variant="outline" onClick={() => setRouteRetry((v) => v + 1)}>إعادة حساب السعر</Button>
+                <p role="alert" className="text-sm text-destructive">
+                  {routeError}
+                </p>
+                <Button variant="outline" onClick={() => setRouteRetry((v) => v + 1)}>
+                  إعادة حساب السعر
+                </Button>
               </div>
             )}
             <div className="space-y-2">
               {VEHICLE_CATS.map((c) => {
                 const active = vehicleCategory === c.key;
-                const fare = routeKm !== null
-                  ? taxiFare(c.key, routeKm, { weather: "mild" as const, roadCondition })
-                  : null;
+                const fare =
+                  routeKm !== null
+                    ? taxiFare(c.key, routeKm, { weather: "mild" as const, roadCondition })
+                    : null;
                 return (
                   <button
                     key={c.key}
@@ -551,11 +634,21 @@ function NewRequest() {
                       active ? "ring-2 ring-primary border-primary" : "border-border/60"
                     }`}
                   >
-                    {c.img
-                      ? <img src={c.img} alt={c.label} width={56} height={38} className="w-14 h-9 object-contain shrink-0" />
-                      : <div className="text-3xl shrink-0">{c.emoji}</div>}
+                    {c.img ? (
+                      <img
+                        src={c.img}
+                        alt={c.label}
+                        width={56}
+                        height={38}
+                        className="w-14 h-9 object-contain shrink-0"
+                      />
+                    ) : (
+                      <div className="text-3xl shrink-0">{c.emoji}</div>
+                    )}
                     <div className="flex-1 font-black text-sm text-foreground">{c.label}</div>
-                    <div className="font-black text-base text-primary shrink-0">{fare !== null ? `${fare.toLocaleString()} د.ع` : "—"}</div>
+                    <div className="font-black text-base text-primary shrink-0">
+                      {fare !== null ? `${fare.toLocaleString()} د.ع` : "—"}
+                    </div>
                   </button>
                 );
               })}
@@ -587,7 +680,16 @@ function NewRequest() {
       >
         رجوع
       </button>
-      <h1 className="text-3xl font-black flex items-center gap-2"><img src={technicianIcon} alt="" width={40} height={40} className="h-10 w-10 object-contain" />طلب خدمة منزلية</h1>
+      <h1 className="text-3xl font-black flex items-center gap-2">
+        <img
+          src={technicianIcon}
+          alt=""
+          width={40}
+          height={40}
+          className="h-10 w-10 object-contain"
+        />
+        طلب خدمة منزلية
+      </h1>
       <p className="text-sm text-muted-foreground mt-1">اختر الحرفة وحدد موقع العمل بسهولة</p>
 
       {/* Services Grid */}
@@ -610,10 +712,15 @@ function NewRequest() {
               {active && (
                 <CheckCircle2 className="absolute top-1.5 left-1.5 h-4 w-4 text-primary fill-card" />
               )}
-              <div
-                className="h-14 w-14 shrink-0 flex items-center justify-center"
-              >
-                <img src={serviceIcon(s.slug)} alt="" loading="lazy" width={56} height={56} className="h-14 w-14 object-contain" />
+              <div className="h-14 w-14 shrink-0 flex items-center justify-center">
+                <img
+                  src={serviceIcon(s.slug)}
+                  alt=""
+                  loading="lazy"
+                  width={56}
+                  height={56}
+                  className="h-14 w-14 object-contain"
+                />
               </div>
               <div className="text-[11px] font-bold text-center leading-tight min-h-[28px]">
                 {s.name_ar}
@@ -625,10 +732,15 @@ function NewRequest() {
 
       {selectedService && (
         <div className="glass rounded-2xl p-3 mb-5 flex items-center gap-3">
-          <div
-            className="h-10 w-10 shrink-0 flex items-center justify-center"
-          >
-            <img src={serviceIcon(selectedService.slug)} alt="" loading="lazy" width={40} height={40} className="h-10 w-10 object-contain" />
+          <div className="h-10 w-10 shrink-0 flex items-center justify-center">
+            <img
+              src={serviceIcon(selectedService.slug)}
+              alt=""
+              loading="lazy"
+              width={40}
+              height={40}
+              className="h-10 w-10 object-contain"
+            />
           </div>
           <div className="text-sm font-bold">{selectedService.name_ar}</div>
         </div>
@@ -652,7 +764,14 @@ function NewRequest() {
                 : "bg-white/70"
             }`}
           >
-            <img src={opt.img} alt="" loading="lazy" width={40} height={40} className="h-10 w-10 mx-auto mb-1 object-contain" />
+            <img
+              src={opt.img}
+              alt=""
+              loading="lazy"
+              width={40}
+              height={40}
+              className="h-10 w-10 mx-auto mb-1 object-contain"
+            />
             <div className="font-black text-sm">{opt.label}</div>
             <div
               className={`text-[10px] mt-0.5 ${level === opt.k ? "opacity-90" : "text-muted-foreground"}`}
@@ -694,7 +813,9 @@ function NewRequest() {
           </div>
           {khabirMode === "with_workers" && (
             <>
-              <div className="mb-2 text-sm font-bold text-muted-foreground">عدد العمال المساعدين</div>
+              <div className="mb-2 text-sm font-bold text-muted-foreground">
+                عدد العمال المساعدين
+              </div>
               <div className="flex items-center gap-3 mb-5 glass rounded-2xl p-3">
                 <button
                   onClick={() => setWorkersCount(Math.max(1, workersCount - 1))}
@@ -823,7 +944,9 @@ function NewRequest() {
       </div>
 
       <div className="mt-5">
-        <div className="text-xs font-bold text-muted-foreground mb-2">📝 ملاحظات إضافية (اختياري)</div>
+        <div className="text-xs font-bold text-muted-foreground mb-2">
+          📝 ملاحظات إضافية (اختياري)
+        </div>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}

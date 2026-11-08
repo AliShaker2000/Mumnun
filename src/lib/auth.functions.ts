@@ -18,8 +18,9 @@ export const lookupAuthEmail = createServerFn({ method: "POST" })
       return { email: id.toLowerCase() };
     }
 
-    const { data: email } = await (supabaseAdmin as any)
-      .rpc("lookup_email_by_phone", { _phone: id });
+    const { data: email } = await (supabaseAdmin as any).rpc("lookup_email_by_phone", {
+      _phone: id,
+    });
 
     if (email) return { email: String(email).toLowerCase() };
 
@@ -45,8 +46,9 @@ export const sendPasswordReset = createServerFn({ method: "POST" })
     if (isEmail) {
       email = id.toLowerCase();
     } else {
-      const { data: emailResult } = await (supabaseAdmin as any)
-        .rpc("lookup_email_by_phone", { _phone: id });
+      const { data: emailResult } = await (supabaseAdmin as any).rpc("lookup_email_by_phone", {
+        _phone: id,
+      });
       email = emailResult ? String(emailResult) : null;
     }
 
@@ -56,7 +58,10 @@ export const sendPasswordReset = createServerFn({ method: "POST" })
 
     try {
       const redirectUrl = new URL(data.redirectTo);
-      const allowedOrigins = (process.env.ALLOWED_REDIRECT_ORIGINS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+      const allowedOrigins = (process.env.ALLOWED_REDIRECT_ORIGINS ?? "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
       if (allowedOrigins.length && !allowedOrigins.includes(redirectUrl.origin)) {
         return { ok: true, hasEmail: false };
       }

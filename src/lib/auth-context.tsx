@@ -32,7 +32,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function loadProfile(uid: string) {
     try {
       const [{ data: prof }, { data: roleRows }] = await Promise.all([
-        supabase.from("profiles").select("id, phone, full_name, avatar_url").eq("id", uid).maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("id, phone, full_name, avatar_url")
+          .eq("id", uid)
+          .maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", uid),
       ]);
       setProfile(prof ?? null);
@@ -68,11 +72,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRoles([]);
       }
     });
-    supabase.auth.getSession().then(async ({ data }) => {
-      setSession(data.session);
-      if (data.session?.user) await loadProfile(data.session.user.id);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    supabase.auth
+      .getSession()
+      .then(async ({ data }) => {
+        setSession(data.session);
+        if (data.session?.user) await loadProfile(data.session.user.id);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
     return () => sub.subscription.unsubscribe();
   }, []);
 
@@ -86,7 +93,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <Ctx.Provider value={{ session, user: session?.user ?? null, profile, roles, loading, refresh, signOut }}>
+    <Ctx.Provider
+      value={{ session, user: session?.user ?? null, profile, roles, loading, refresh, signOut }}
+    >
       {children}
     </Ctx.Provider>
   );

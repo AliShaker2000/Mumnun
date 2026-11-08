@@ -1,4 +1,5 @@
 <!-- LOVABLE:BEGIN -->
+
 > [!IMPORTANT]
 > This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
 > published git history — force pushing, or rebasing/amending/squashing commits
@@ -7,9 +8,11 @@
 >
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
+
 <!-- LOVABLE:END -->
 
 # Architecture
+
 - Resolve technician service illustrations through the shared slug-to-asset registry with an illustrated fallback, so selection and summary displays stay consistent.
 - Database schema lives in `drizzle/migrations` (consolidated from the imported project); add changes as new migrations, never edit applied ones.
 - Admin/staff checks run in database functions (`has_staff_role`, `has_admin_access`, `is_super_admin`, `assert_staff`); server functions call them before using the privileged client, so never query `client.server` from route components.

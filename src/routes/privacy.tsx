@@ -1,14 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/privacy")({ ssr: false,
-  head: () => ({ meta: [
-    { title: "سياسة الخصوصية | ممنون" },
-    { name: "description", content: "تعرّف على استخدام بياناتك وحماية خصوصيتك في ممنون." },
-    { property: "og:title", content: "سياسة الخصوصية | ممنون" },
-    { property: "og:description", content: "تعرّف على استخدام بياناتك وحماية خصوصيتك في ممنون." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }), component: PrivacyPage });
+export const Route = createFileRoute("/privacy")({
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "سياسة الخصوصية | ممنون" },
+      { name: "description", content: "تعرّف على استخدام بياناتك وحماية خصوصيتك في ممنون." },
+      { property: "og:title", content: "سياسة الخصوصية | ممنون" },
+      { property: "og:description", content: "تعرّف على استخدام بياناتك وحماية خصوصيتك في ممنون." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: PrivacyPage,
+});
 
 function PrivacyPage() {
   return (
@@ -17,7 +22,10 @@ function PrivacyPage() {
       <div className="glass rounded-3xl p-6 space-y-4 text-sm leading-relaxed text-muted-foreground">
         <section>
           <h2 className="font-black text-foreground mb-2">مقدمة</h2>
-          <p>تطبيق "ممنون" منصة لنقل الأشخاص وطلب الخدمات المنزلية. نحن نحترم خصوصيتك ونلتزم بحماية بياناتك الشخصية.</p>
+          <p>
+            تطبيق "ممنون" منصة لنقل الأشخاص وطلب الخدمات المنزلية. نحن نحترم خصوصيتك ونلتزم بحماية
+            بياناتك الشخصية.
+          </p>
         </section>
         <section>
           <h2 className="font-black text-foreground mb-2">البيانات التي نجمعها</h2>
@@ -39,11 +47,17 @@ function PrivacyPage() {
         </section>
         <section>
           <h2 className="font-black text-foreground mb-2">مشاركة البيانات</h2>
-          <p>لا نبيع بياناتك لأطراف ثالثة. قد نشاركها مع مزودي الخدمة (السائقين والفنيين) فقط لإتمام الطلب، أو عند الطلب القانوني من الجهات المختصة.</p>
+          <p>
+            لا نبيع بياناتك لأطراف ثالثة. قد نشاركها مع مزودي الخدمة (السائقين والفنيين) فقط لإتمام
+            الطلب، أو عند الطلب القانوني من الجهات المختصة.
+          </p>
         </section>
         <section>
           <h2 className="font-black text-foreground mb-2">حماية البيانات</h2>
-          <p>نستخدم تشفير SSL/TLS لجميع الاتصالات، ونخزّن كلمات المرور بشكل مشفّر. لا يمكن لأحد رؤية كلمة مرورك.</p>
+          <p>
+            نستخدم تشفير SSL/TLS لجميع الاتصالات، ونخزّن كلمات المرور بشكل مشفّر. لا يمكن لأحد رؤية
+            كلمة مرورك.
+          </p>
         </section>
         <section>
           <h2 className="font-black text-foreground mb-2">حقوقك</h2>

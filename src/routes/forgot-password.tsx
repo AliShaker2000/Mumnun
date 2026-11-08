@@ -8,14 +8,22 @@ import { isValidPhone, normalizePhone } from "@/lib/phone";
 
 export const Route = createFileRoute("/forgot-password")({
   ssr: false,
-  head: () => ({ meta: [
-    { title: "استعادة كلمة المرور | ممنون" },
-    { name: "description", content: "استعد الوصول إلى حساب ممنون باستخدام الهاتف أو البريد الإلكتروني." },
-    { property: "og:title", content: "استعادة كلمة المرور | ممنون" },
-    { property: "og:description", content: "استعد الوصول إلى حساب ممنون باستخدام الهاتف أو البريد الإلكتروني." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "استعادة كلمة المرور | ممنون" },
+      {
+        name: "description",
+        content: "استعد الوصول إلى حساب ممنون باستخدام الهاتف أو البريد الإلكتروني.",
+      },
+      { property: "og:title", content: "استعادة كلمة المرور | ممنون" },
+      {
+        property: "og:description",
+        content: "استعد الوصول إلى حساب ممنون باستخدام الهاتف أو البريد الإلكتروني.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: ForgotPasswordPage,
 });
 
@@ -49,9 +57,7 @@ function ForgotPasswordPage() {
       });
       setSent(true);
       if (!res.hasEmail) {
-        toast.info(
-          "لا يوجد بريد إلكتروني مسجّل لهذا الحساب. تواصل مع الدعم لإعادة التعيين.",
-        );
+        toast.info("لا يوجد بريد إلكتروني مسجّل لهذا الحساب. تواصل مع الدعم لإعادة التعيين.");
       } else {
         toast.success("تم إرسال رابط الاستعادة إلى بريدك");
       }
@@ -79,8 +85,8 @@ function ForgotPasswordPage() {
           <div className="text-center flex-1 flex flex-col items-center justify-center gap-4">
             <Mail className="h-12 w-12 text-primary" />
             <p className="text-sm">
-              إذا كان لهذا الحساب بريد مسجّل، فقد أرسلنا له رابط الاستعادة.
-              راجع بريدك (بما فيه مجلد البريد المهمل).
+              إذا كان لهذا الحساب بريد مسجّل، فقد أرسلنا له رابط الاستعادة. راجع بريدك (بما فيه مجلد
+              البريد المهمل).
             </p>
             <button
               onClick={() => navigate({ to: "/auth" })}

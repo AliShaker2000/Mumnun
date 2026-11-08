@@ -31,9 +31,15 @@ export const Route = createFileRoute("/onboarding/driver")({
   head: () => ({
     meta: [
       { title: "تسجيل الكابتن وتأكيد الهوية | ممنون" },
-      { name: "description", content: "سجل بيانات سيارتك وأكد هويتك للانضمام إلى كباتن ممنون المعتمدين." },
+      {
+        name: "description",
+        content: "سجل بيانات سيارتك وأكد هويتك للانضمام إلى كباتن ممنون المعتمدين.",
+      },
       { property: "og:title", content: "تسجيل الكابتن وتأكيد الهوية | ممنون" },
-      { property: "og:description", content: "سجل بيانات سيارتك وأكد هويتك للانضمام إلى كباتن ممنون المعتمدين." },
+      {
+        property: "og:description",
+        content: "سجل بيانات سيارتك وأكد هويتك للانضمام إلى كباتن ممنون المعتمدين.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -68,10 +74,28 @@ const SUGGESTED_MODELS: Record<string, string[]> = {
   سايبا: ["سايبا 131", "تيبا", "كويك"],
 };
 
-const CATEGORY_META: Record<VehicleCategory, { label: string; emoji: string; gradient: string; desc: string }> = {
-  economy: { label: "ممنون اقتصادي", emoji: "🚗", gradient: "from-emerald-400 to-teal-500", desc: "سيارات موفرة وعملية للمشاوير اليومية" },
-  premium: { label: "ممنون المتميز", emoji: "🚙", gradient: "from-sky-500 to-indigo-600", desc: "سيارات حديثة ومكيفة برحابة عالية" },
-  luxury: { label: "ممنون فاخر", emoji: "🏎️", gradient: "from-amber-400 to-orange-500", desc: "أحدث الموديلات والفئات الراقية" },
+const CATEGORY_META: Record<
+  VehicleCategory,
+  { label: string; emoji: string; gradient: string; desc: string }
+> = {
+  economy: {
+    label: "ممنون اقتصادي",
+    emoji: "🚗",
+    gradient: "from-emerald-400 to-teal-500",
+    desc: "سيارات موفرة وعملية للمشاوير اليومية",
+  },
+  premium: {
+    label: "ممنون المتميز",
+    emoji: "🚙",
+    gradient: "from-sky-500 to-indigo-600",
+    desc: "سيارات حديثة ومكيفة برحابة عالية",
+  },
+  luxury: {
+    label: "ممنون فاخر",
+    emoji: "🏎️",
+    gradient: "from-amber-400 to-orange-500",
+    desc: "أحدث الموديلات والفئات الراقية",
+  },
 };
 
 function OnboardingDriver() {
@@ -284,7 +308,9 @@ function OnboardingDriver() {
         <div className="space-y-5 animate-in fade-in duration-200">
           {/* Vehicle Category Card */}
           <div>
-            <div className="text-xs font-bold text-muted-foreground mb-2">اختر فئة سيارتك في التطبيق</div>
+            <div className="text-xs font-bold text-muted-foreground mb-2">
+              اختر فئة سيارتك في التطبيق
+            </div>
             <div className="grid grid-cols-3 gap-2">
               {(Object.keys(CATEGORY_META) as VehicleCategory[]).map((k) => {
                 const c = CATEGORY_META[k];
@@ -306,7 +332,9 @@ function OnboardingDriver() {
                 );
               })}
             </div>
-            <div className={`mt-2.5 rounded-2xl p-3 bg-gradient-to-r ${catMeta.gradient} text-white shadow-sm text-xs`}>
+            <div
+              className={`mt-2.5 rounded-2xl p-3 bg-gradient-to-r ${catMeta.gradient} text-white shadow-sm text-xs`}
+            >
               <div className="font-black text-sm mb-0.5">{catMeta.label}</div>
               <div className="text-[11px] opacity-90">{catMeta.desc}</div>
             </div>
@@ -314,7 +342,9 @@ function OnboardingDriver() {
 
           {/* Quick Make Selection */}
           <div>
-            <div className="text-xs font-bold text-muted-foreground mb-2">الشركة المصنعة (الماركة)</div>
+            <div className="text-xs font-bold text-muted-foreground mb-2">
+              الشركة المصنعة (الماركة)
+            </div>
             <div className="flex flex-wrap gap-2">
               {POPULAR_MAKES.map((m) => (
                 <button
@@ -348,7 +378,9 @@ function OnboardingDriver() {
 
           {/* Model Name with Suggestions */}
           <div>
-            <div className="text-xs font-bold text-muted-foreground mb-2">موديل السيارة (الاسم)</div>
+            <div className="text-xs font-bold text-muted-foreground mb-2">
+              موديل السيارة (الاسم)
+            </div>
             <input
               value={modelName}
               onChange={(e) => setModelName(e.target.value)}
@@ -395,7 +427,9 @@ function OnboardingDriver() {
           </div>
 
           <div>
-            <div className="text-xs font-bold text-muted-foreground mb-1.5">رقم لوحة السيارة والمحافظة</div>
+            <div className="text-xs font-bold text-muted-foreground mb-1.5">
+              رقم لوحة السيارة والمحافظة
+            </div>
             <input
               value={plate}
               onChange={(e) => setPlate(e.target.value)}
@@ -429,7 +463,8 @@ function OnboardingDriver() {
             <div>
               <div className="font-black text-sm">توثيق هوية الكابتن المعتمد</div>
               <div className="mt-0.5 leading-relaxed text-[11px] text-sky-800">
-                لضمان أمان وسلامة الركاب، يجب أن يتطابق اسمك الكامل المكتوب مع اسمك في الهوية الرسمية، مع صورة واضحة لوجهك.
+                لضمان أمان وسلامة الركاب، يجب أن يتطابق اسمك الكامل المكتوب مع اسمك في الهوية
+                الرسمية، مع صورة واضحة لوجهك.
               </div>
             </div>
           </div>
@@ -454,7 +489,9 @@ function OnboardingDriver() {
                 <UserCheck className="h-5 w-5 text-primary" />
                 <span className="font-black text-sm">صورة الوجه الشخصية (تصوير حقيقي) *</span>
               </div>
-              {facePhoto && <span className="text-[11px] font-bold text-emerald-600">تم الإرفاق ✓</span>}
+              {facePhoto && (
+                <span className="text-[11px] font-bold text-emerald-600">تم الإرفاق ✓</span>
+              )}
             </div>
 
             <div className="flex items-center gap-4">
@@ -501,7 +538,9 @@ function OnboardingDriver() {
                 <FileText className="h-5 w-5 text-primary" />
                 <span className="font-black text-sm">صورة الهوية الأصلية / إجازة السوق *</span>
               </div>
-              {idCardPhoto && <span className="text-[11px] font-bold text-emerald-600">تم الإرفاق ✓</span>}
+              {idCardPhoto && (
+                <span className="text-[11px] font-bold text-emerald-600">تم الإرفاق ✓</span>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -573,7 +612,9 @@ function OnboardingDriver() {
                 className="mt-0.5 h-4 w-4 rounded accent-emerald-600"
               />
               <span className="font-bold text-emerald-950 leading-relaxed">
-                أؤكد بأن الاسم المكتوب أعلاه (<span className="text-primary">{legalName || "..."}</span>) يطابق تماماً الاسم في الهوية الأصلية المرفقة، وتتحمل كامل المسؤولية القانونية.
+                أؤكد بأن الاسم المكتوب أعلاه (
+                <span className="text-primary">{legalName || "..."}</span>) يطابق تماماً الاسم في
+                الهوية الأصلية المرفقة، وتتحمل كامل المسؤولية القانونية.
               </span>
             </label>
           </div>

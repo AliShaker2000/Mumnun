@@ -5,7 +5,8 @@ let enabled = true;
 function getCtx(): AudioContext | null {
   if (typeof window === "undefined") return null;
   if (!ctx) {
-    const AC = (window.AudioContext || (window as any).webkitAudioContext) as typeof AudioContext | undefined;
+    const AC = (window.AudioContext || (window as any).webkitAudioContext) as
+      typeof AudioContext | undefined;
     if (!AC) return null;
     ctx = new AC();
   }
@@ -26,10 +27,31 @@ export function playClick(variant: Variant = "tap") {
   o.connect(g);
   g.connect(c.destination);
 
-  let f1 = 880, f2 = 520, dur = 0.07, peak = 0.08, type: OscillatorType = "sine";
-  if (variant === "soft")   { f1 = 660; f2 = 440; dur = 0.09; peak = 0.05; }
-  if (variant === "pop")    { f1 = 1200; f2 = 700; dur = 0.06; peak = 0.10; type = "triangle"; }
-  if (variant === "toggle") { f1 = 520; f2 = 980; dur = 0.12; peak = 0.07; type = "triangle"; }
+  let f1 = 880,
+    f2 = 520,
+    dur = 0.07,
+    peak = 0.08,
+    type: OscillatorType = "sine";
+  if (variant === "soft") {
+    f1 = 660;
+    f2 = 440;
+    dur = 0.09;
+    peak = 0.05;
+  }
+  if (variant === "pop") {
+    f1 = 1200;
+    f2 = 700;
+    dur = 0.06;
+    peak = 0.1;
+    type = "triangle";
+  }
+  if (variant === "toggle") {
+    f1 = 520;
+    f2 = 980;
+    dur = 0.12;
+    peak = 0.07;
+    type = "triangle";
+  }
 
   o.type = type;
   o.frequency.setValueAtTime(f1, now);
@@ -99,7 +121,10 @@ export function setSoundEnabled(v: boolean) {
 export function isSoundEnabled() {
   if (typeof window === "undefined") return true;
   const v = window.localStorage.getItem("mumnun-sound");
-  if (v === "0") { enabled = false; return false; }
+  if (v === "0") {
+    enabled = false;
+    return false;
+  }
   enabled = true;
   return true;
 }

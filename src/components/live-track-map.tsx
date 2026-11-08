@@ -13,9 +13,7 @@ function haversineKm(a: Coords, b: Coords) {
   const dLng = ((b.lng - a.lng) * Math.PI) / 180;
   const s =
     Math.sin(dLat / 2) ** 2 +
-    Math.cos((a.lat * Math.PI) / 180) *
-      Math.cos((b.lat * Math.PI) / 180) *
-      Math.sin(dLng / 2) ** 2;
+    Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
 }
 
@@ -26,8 +24,7 @@ function bearingDeg(a: Coords, b: Coords) {
   const lambda2 = (b.lng * Math.PI) / 180;
   const y = Math.sin(lambda2 - lambda1) * Math.cos(phi2);
   const x =
-    Math.cos(phi1) * Math.sin(phi2) -
-    Math.sin(phi1) * Math.cos(phi2) * Math.cos(lambda2 - lambda1);
+    Math.cos(phi1) * Math.sin(phi2) - Math.sin(phi1) * Math.cos(phi2) * Math.cos(lambda2 - lambda1);
   const deg = (Math.atan2(y, x) * 180) / Math.PI;
   return (deg + 360) % 360;
 }
@@ -94,10 +91,16 @@ export function LiveTrackMap({
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const close = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { setIsFullscreen(false); onClose?.(); }
+      if (event.key === "Escape") {
+        setIsFullscreen(false);
+        onClose?.();
+      }
     };
     window.addEventListener("keydown", close);
-    return () => { document.body.style.overflow = previous; window.removeEventListener("keydown", close); };
+    return () => {
+      document.body.style.overflow = previous;
+      window.removeEventListener("keydown", close);
+    };
   }, [isFullscreen, onClose]);
 
   // Initialize Map
@@ -105,21 +108,26 @@ export function LiveTrackMap({
     let cancelled = false;
     setMapReady(false);
     setMapError(false);
-    loadGoogleMaps().then((g) => {
-      if (cancelled || !containerRef.current || !g) return;
-      const initialCenter = effectivePickup ?? activeDriverCoord ?? { lat: 33.3152, lng: 44.3661 };
-      const map = new g.maps.Map(containerRef.current, {
-        center: initialCenter,
-        zoom: 15,
-        disableDefaultUI: true,
-        gestureHandling: "greedy",
-        clickableIcons: false,
+    loadGoogleMaps()
+      .then((g) => {
+        if (cancelled || !containerRef.current || !g) return;
+        const initialCenter = effectivePickup ??
+          activeDriverCoord ?? { lat: 33.3152, lng: 44.3661 };
+        const map = new g.maps.Map(containerRef.current, {
+          center: initialCenter,
+          zoom: 15,
+          disableDefaultUI: true,
+          gestureHandling: "greedy",
+          clickableIcons: false,
+        });
+        mapRef.current = map;
+        readyRef.current = true;
+        setMapReady(true);
+        syncMapElements(false);
+      })
+      .catch(() => {
+        if (!cancelled) setMapError(true);
       });
-      mapRef.current = map;
-      readyRef.current = true;
-      setMapReady(true);
-      syncMapElements(false);
-    }).catch(() => { if (!cancelled) setMapError(true); });
 
     return () => {
       cancelled = true;
@@ -191,7 +199,9 @@ export function LiveTrackMap({
 
     // 3. Driver Vehicle Marker
     if (activeDriverCoord) {
-      const heading = activeDriverCoord.heading ?? (effectivePickup ? bearingDeg(activeDriverCoord, effectivePickup) : 0);
+      const heading =
+        activeDriverCoord.heading ??
+        (effectivePickup ? bearingDeg(activeDriverCoord, effectivePickup) : 0);
       const carIcon = {
         path: g.maps.SymbolPath.FORWARD_CLOSED_ARROW,
         scale: 6,
@@ -336,14 +346,25 @@ export function LiveTrackMap({
           <div className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse shrink-0" />
           <div className="text-right">
             <div className="text-xs font-black flex items-center gap-1.5 text-foreground">
-              <span>{!activeDriverCoord ? "بانتظار مشاركة الموقع" : status === "in_progress" ? "في الطريق إلى الوجهة" : myRole === "provider" ? "موقع العميل" : "الكابتن متجه إليك"}</span>
+              <span>
+                {!activeDriverCoord
+                  ? "بانتظار مشاركة الموقع"
+                  : status === "in_progress"
+                    ? "في الطريق إلى الوجهة"
+                    : myRole === "provider"
+                      ? "موقع العميل"
+                      : "الكابتن متجه إليك"}
+              </span>
               {etaMinutes != null && (
                 <span className="text-primary font-black">· ~{etaMinutes} دقيقة</span>
               )}
             </div>
             {distanceKm != null && (
               <div className="text-[11px] text-muted-foreground font-semibold">
-                المسافة المتبقية: {distanceKm < 1 ? `${Math.round(distanceKm * 1000)} متر` : `${distanceKm.toFixed(1)} كم`}
+                المسافة المتبقية:{" "}
+                {distanceKm < 1
+                  ? `${Math.round(distanceKm * 1000)} متر`
+                  : `${distanceKm.toFixed(1)} كم`}
               </div>
             )}
           </div>
@@ -441,7 +462,21 @@ export function LiveTrackMap({
 
       {!mapReady && (
         <div className="absolute inset-0 grid place-items-center bg-white/70 z-20">
-          {mapError ? <div className="text-center text-sm text-foreground space-y-3"><p>تعذّر تحميل الخريطة؛ تحقق من الاتصال وأعد المحاولة.</p><Button onClick={() => { if (onClose) onClose(); else window.location.reload(); }}>العودة</Button></div> : <Loader2 className="h-6 w-6 animate-spin text-primary" />}
+          {mapError ? (
+            <div className="text-center text-sm text-foreground space-y-3">
+              <p>تعذّر تحميل الخريطة؛ تحقق من الاتصال وأعد المحاولة.</p>
+              <Button
+                onClick={() => {
+                  if (onClose) onClose();
+                  else window.location.reload();
+                }}
+              >
+                العودة
+              </Button>
+            </div>
+          ) : (
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          )}
         </div>
       )}
     </div>

@@ -7,21 +7,41 @@ import { toast } from "@/lib/toast";
 
 export const Route = createFileRoute("/select-role")({
   ssr: false,
-  head: () => ({ meta: [
-    { title: "نوع الحساب | ممنون" },
-    { name: "description", content: "اختر حساب زبون أو كابتن أو فني في ممنون." },
-    { property: "og:title", content: "نوع الحساب | ممنون" },
-    { property: "og:description", content: "اختر حساب زبون أو كابتن أو فني في ممنون." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "نوع الحساب | ممنون" },
+      { name: "description", content: "اختر حساب زبون أو كابتن أو فني في ممنون." },
+      { property: "og:title", content: "نوع الحساب | ممنون" },
+      { property: "og:description", content: "اختر حساب زبون أو كابتن أو فني في ممنون." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: SelectRolePage,
 });
 
 const roles: { id: AppRole; title: string; desc: string; icon: any; gradient: string }[] = [
-  { id: "customer", title: "زبون", desc: "اطلب تكسي أو خدمة منزلية بضغطة واحدة", icon: User, gradient: "from-blue-500 to-cyan-400" },
-  { id: "driver", title: "كابتن تكسي", desc: "استقبل طلبات الرحلات واكسب يومياً", icon: Car, gradient: "from-amber-500 to-yellow-400" },
-  { id: "worker", title: "فني خدمات", desc: "قدم خدمتك واستقبل طلبات في اختصاصك", icon: Wrench, gradient: "from-emerald-500 to-teal-400" },
+  {
+    id: "customer",
+    title: "زبون",
+    desc: "اطلب تكسي أو خدمة منزلية بضغطة واحدة",
+    icon: User,
+    gradient: "from-blue-500 to-cyan-400",
+  },
+  {
+    id: "driver",
+    title: "كابتن تكسي",
+    desc: "استقبل طلبات الرحلات واكسب يومياً",
+    icon: Car,
+    gradient: "from-amber-500 to-yellow-400",
+  },
+  {
+    id: "worker",
+    title: "فني خدمات",
+    desc: "قدم خدمتك واستقبل طلبات في اختصاصك",
+    icon: Wrench,
+    gradient: "from-emerald-500 to-teal-400",
+  },
 ];
 
 function SelectRolePage() {
@@ -38,7 +58,9 @@ function SelectRolePage() {
     setBusy(true);
     try {
       if (picked === "customer") {
-        const { error } = await supabase.from("user_roles").insert({ user_id: session.user.id, role: "customer" });
+        const { error } = await supabase
+          .from("user_roles")
+          .insert({ user_id: session.user.id, role: "customer" });
         if (error && !error.message.toLowerCase().includes("duplicate")) throw error;
         await refresh();
         navigate({ to: "/home" });
@@ -58,7 +80,9 @@ function SelectRolePage() {
     <div className="min-h-screen px-5 pt-12 pb-8 flex flex-col">
       <div className="mb-8">
         <h1 className="text-3xl font-black">اختر نوع حسابك</h1>
-        <p className="text-sm text-muted-foreground mt-2">يمكنك إضافة أدوار أخرى لاحقاً من الإعدادات</p>
+        <p className="text-sm text-muted-foreground mt-2">
+          يمكنك إضافة أدوار أخرى لاحقاً من الإعدادات
+        </p>
       </div>
 
       <div className="space-y-3 flex-1">
@@ -73,14 +97,18 @@ function SelectRolePage() {
                 active ? "ring-2 ring-primary shadow-elegant glow-primary" : ""
               }`}
             >
-              <div className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${gradient} grid place-items-center shadow-card`}>
+              <div
+                className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${gradient} grid place-items-center shadow-card`}
+              >
                 <Icon className="h-7 w-7 text-white" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-lg font-black">{title}</div>
                 <div className="text-xs text-muted-foreground mt-1 truncate">{desc}</div>
               </div>
-              <div className={`h-6 w-6 rounded-full border-2 grid place-items-center ${active ? "border-primary bg-primary" : "border-border"}`}>
+              <div
+                className={`h-6 w-6 rounded-full border-2 grid place-items-center ${active ? "border-primary bg-primary" : "border-border"}`}
+              >
                 {active && <div className="h-2.5 w-2.5 rounded-full bg-primary-foreground" />}
               </div>
             </button>

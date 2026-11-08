@@ -23,21 +23,27 @@ export interface FareBreakdown {
   roadDescription: string;
 }
 
-export const FARE_TABLE: Record<VehicleCategory, { base: number; perKm: number; minimum: number; titleAr: string }> = {
+export const FARE_TABLE: Record<
+  VehicleCategory,
+  { base: number; perKm: number; minimum: number; titleAr: string }
+> = {
   economy: { base: 0, perKm: 400, minimum: 0, titleAr: "ممنون اقتصادي" },
   premium: { base: 0, perKm: 400, minimum: 0, titleAr: "ممنون المتميز" },
-  luxury:  { base: 0, perKm: 400, minimum: 0, titleAr: "ممنون فاخر" },
+  luxury: { base: 0, perKm: 400, minimum: 0, titleAr: "ممنون فاخر" },
 };
 
-export const WEATHER_RATES: Record<WeatherCondition, { extra: number; label: string; icon: string }> = {
+export const WEATHER_RATES: Record<
+  WeatherCondition,
+  { extra: number; label: string; icon: string }
+> = {
   heat: { extra: 750, label: "أجواء حارة (تكييف مستمر AC)", icon: "☀️" },
   rain: { extra: 750, label: "أجواء ماطرة وأمطار", icon: "🌧️" },
   cold: { extra: 500, label: "أجواء باردة وشتاء", icon: "❄️" },
-  mild: { extra: 0,   label: "جو معتدل", icon: "🌤️" },
+  mild: { extra: 0, label: "جو معتدل", icon: "🌤️" },
 };
 
 export const ROAD_RATES: Record<RoadCondition, { extra: number; label: string; icon: string }> = {
-  normal:    { extra: 0,   label: "طريق سالك وسريع", icon: "🟢" },
+  normal: { extra: 0, label: "طريق سالك وسريع", icon: "🟢" },
   congested: { extra: 750, label: "طريق مزدحم وساعات ذروة", icon: "🟡" },
 };
 
@@ -50,7 +56,7 @@ export function roundTo250(n: number): number {
 export function calculateFareBreakdown(
   category: VehicleCategory,
   distanceKm: number,
-  options?: FareOptions
+  options?: FareOptions,
 ): FareBreakdown {
   const t = FARE_TABLE[category];
   if (!Number.isFinite(distanceKm) || distanceKm < 0) throw new Error("مسافة الطريق غير صالحة");
@@ -83,7 +89,7 @@ export function calculateFareBreakdown(
 export function taxiFare(
   category: VehicleCategory,
   distanceKm: number,
-  options?: FareOptions
+  options?: FareOptions,
 ): number {
   return calculateFareBreakdown(category, distanceKm, options).total;
 }

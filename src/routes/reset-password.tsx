@@ -6,14 +6,16 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/reset-password")({
   ssr: false,
-  head: () => ({ meta: [
-    { title: "كلمة مرور جديدة | ممنون" },
-    { name: "description", content: "عيّن كلمة مرور جديدة لحساب ممنون." },
-    { property: "og:title", content: "كلمة مرور جديدة | ممنون" },
-    { property: "og:description", content: "عيّن كلمة مرور جديدة لحساب ممنون." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "كلمة مرور جديدة | ممنون" },
+      { name: "description", content: "عيّن كلمة مرور جديدة لحساب ممنون." },
+      { property: "og:title", content: "كلمة مرور جديدة | ممنون" },
+      { property: "og:description", content: "عيّن كلمة مرور جديدة لحساب ممنون." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: ResetPasswordPage,
 });
 
@@ -69,9 +71,7 @@ function ResetPasswordPage() {
           <Lock className="h-8 w-8 text-primary-foreground" />
         </div>
         <h1 className="text-2xl font-black">كلمة مرور جديدة</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          اختر كلمة مرور قوية لحسابك
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">اختر كلمة مرور قوية لحسابك</p>
       </div>
 
       <div className="glass rounded-3xl p-6 shadow-card flex-1 flex flex-col">

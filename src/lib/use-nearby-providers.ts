@@ -19,7 +19,15 @@ export function useNearbyProviders(opts: {
   enabled?: boolean;
   intervalMs?: number;
 }) {
-  const { center, type, category, serviceId, radiusKm = 5, enabled = true, intervalMs = 15000 } = opts;
+  const {
+    center,
+    type,
+    category,
+    serviceId,
+    radiusKm = 5,
+    enabled = true,
+    intervalMs = 15000,
+  } = opts;
   const [pins, setPins] = useState<ProviderPin[]>([]);
   const timerRef = useRef<any>(null);
   const debounceRef = useRef<any>(null);
@@ -38,9 +46,17 @@ export function useNearbyProviders(opts: {
       if (inflightRef.current) return;
       inflightRef.current = true;
       try {
-        const rows = await findPinsFn({ data: {
-          lat: center.lat, lng: center.lng, type, category, serviceId, radiusKm, limit: 30,
-        } });
+        const rows = await findPinsFn({
+          data: {
+            lat: center.lat,
+            lng: center.lng,
+            type,
+            category,
+            serviceId,
+            radiusKm,
+            limit: 30,
+          },
+        });
         if (cancelled) return;
         setPins(
           (rows as ServerPin[]).map((r) => ({
@@ -48,7 +64,7 @@ export function useNearbyProviders(opts: {
             lat: Number(r.lat),
             lng: Number(r.lng),
             heading: r.heading == null ? null : Number(r.heading),
-          }))
+          })),
         );
       } catch {
         // ignore — pins are non-critical

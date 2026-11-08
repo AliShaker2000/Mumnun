@@ -23,12 +23,28 @@ import internet from "@/assets/service-internet.png";
 import fallback from "@/assets/service-fallback.png";
 
 const serviceIcons: Record<string, string> = {
-  build, plaster, carpentry_form: carpentryForm, flooring, chef, plumbing,
-  electric_setup: electricSetup, electric_street: electricStreet,
-  washer_repair: washer, stove_repair: stove, fridge_repair: fridge,
-  ac_repair: ac, cleaning, wood_carpentry: wood, blacksmith, general,
-  goods_transport: goods, furniture_moving: furniture, cargo_handling: cargo,
-  gardener, kia_driver: kiaDriver, internet_install: internet,
+  build,
+  plaster,
+  carpentry_form: carpentryForm,
+  flooring,
+  chef,
+  plumbing,
+  electric_setup: electricSetup,
+  electric_street: electricStreet,
+  washer_repair: washer,
+  stove_repair: stove,
+  fridge_repair: fridge,
+  ac_repair: ac,
+  cleaning,
+  wood_carpentry: wood,
+  blacksmith,
+  general,
+  goods_transport: goods,
+  furniture_moving: furniture,
+  cargo_handling: cargo,
+  gardener,
+  kia_driver: kiaDriver,
+  internet_install: internet,
 };
 
 export function serviceIcon(slug: string): string {

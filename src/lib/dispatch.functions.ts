@@ -7,10 +7,19 @@ export const dispatchRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ requestId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { data: req, error } = await context.supabase.from("service_requests").select("id, customer_id, type, status").eq("id", data.requestId).single();
+    const { data: req, error } = await context.supabase
+      .from("service_requests")
+      .select("id, customer_id, type, status")
+      .eq("id", data.requestId)
+      .single();
     if (error || !req) throw new Error("الطلب غير موجود");
     if (req.customer_id !== context.userId) throw new Error("ليس لديك صلاحية لهذا الطلب");
-    const { count } = await context.supabase.from("request_offers").select("id", { count: "exact", head: true }).eq("request_id", req.id).eq("status", "pending").gt("expires_at", new Date().toISOString());
+    const { count } = await context.supabase
+      .from("request_offers")
+      .select("id", { count: "exact", head: true })
+      .eq("request_id", req.id)
+      .eq("status", "pending")
+      .gt("expires_at", new Date().toISOString());
     return { offers: count ?? 0, reason: req.status };
   });
 
@@ -21,8 +30,15 @@ export const acceptServiceRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ requestId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { error } = await (context.supabase as any).rpc("accept_service_request", { _request_id: data.requestId });
-    if (error) throw new Error(error.message.includes("request_unavailable") ? "العميل ألغى الطلب أو قبله فني ثاني" : error.message);
+    const { error } = await (context.supabase as any).rpc("accept_service_request", {
+      _request_id: data.requestId,
+    });
+    if (error)
+      throw new Error(
+        error.message.includes("request_unavailable")
+          ? "العميل ألغى الطلب أو قبله فني ثاني"
+          : error.message,
+      );
     return { ok: true };
   });
 
@@ -48,14 +64,22 @@ export const respondToOffer = createServerFn({ method: "POST" })
       .single();
     if (error || !offer) throw new Error("Offer not found");
     if (offer.provider_id !== userId) throw new Error("Forbidden");
-    
 
     if (data.action === "accept") {
-      const { error: accErr } = await (supabase as any).rpc("accept_service_request", { _request_id: offer.request_id });
-      if (accErr) throw new Error(accErr.message.includes("request_unavailable") ? "العميل ألغى الطلب أو قبله كابتن ثاني" : accErr.message);
+      const { error: accErr } = await (supabase as any).rpc("accept_service_request", {
+        _request_id: offer.request_id,
+      });
+      if (accErr)
+        throw new Error(
+          accErr.message.includes("request_unavailable")
+            ? "العميل ألغى الطلب أو قبله كابتن ثاني"
+            : accErr.message,
+        );
       return { ok: true, action: "accepted", accepted: true, requestId: offer.request_id };
     } else {
-      const { error: rejectError } = await (supabase as any).rpc("reject_request_offer", { _offer_id: data.offerId });
+      const { error: rejectError } = await (supabase as any).rpc("reject_request_offer", {
+        _offer_id: data.offerId,
+      });
       if (rejectError) throw new Error(rejectError.message);
       return { ok: true, action: "rejected" };
     }
@@ -67,14 +91,24 @@ export const respondToOffer = createServerFn({ method: "POST" })
 export const cancelRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
-    z.object({
-      requestId: z.string().uuid(),
-      reason: z.string().max(500).optional(),
-    }).parse(d),
+    z
+      .object({
+        requestId: z.string().uuid(),
+        reason: z.string().max(500).optional(),
+      })
+      .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { error } = await (context.supabase as any).rpc("cancel_service_request", { _request_id: data.requestId, _reason: data.reason ?? null });
-    if (error) throw new Error(error.message.includes("request_finished") ? "الطلب منتهي أصلاً" : "تعذّر الإلغاء: " + error.message);
+    const { error } = await (context.supabase as any).rpc("cancel_service_request", {
+      _request_id: data.requestId,
+      _reason: data.reason ?? null,
+    });
+    if (error)
+      throw new Error(
+        error.message.includes("request_finished")
+          ? "الطلب منتهي أصلاً"
+          : "تعذّر الإلغاء: " + error.message,
+      );
     return { ok: true };
   });
 
@@ -84,14 +118,24 @@ export const cancelRequest = createServerFn({ method: "POST" })
 export const providerCancelRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
-    z.object({
-      requestId: z.string().uuid(),
-      reason: z.string().max(500).optional(),
-    }).parse(d),
+    z
+      .object({
+        requestId: z.string().uuid(),
+        reason: z.string().max(500).optional(),
+      })
+      .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { error } = await (context.supabase as any).rpc("cancel_service_request", { _request_id: data.requestId, _reason: data.reason ?? null });
-    if (error) throw new Error(error.message.includes("request_finished") ? "الطلب منتهي أصلاً" : "تعذّر الإلغاء: " + error.message);
+    const { error } = await (context.supabase as any).rpc("cancel_service_request", {
+      _request_id: data.requestId,
+      _reason: data.reason ?? null,
+    });
+    if (error)
+      throw new Error(
+        error.message.includes("request_finished")
+          ? "الطلب منتهي أصلاً"
+          : "تعذّر الإلغاء: " + error.message,
+      );
     return { ok: true };
   });
 
@@ -100,7 +144,11 @@ export const retryDispatch = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ requestId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { data: req, error } = await context.supabase.from("service_requests").select("id, customer_id, status").eq("id", data.requestId).single();
+    const { data: req, error } = await context.supabase
+      .from("service_requests")
+      .select("id, customer_id, status")
+      .eq("id", data.requestId)
+      .single();
     if (error || !req) throw new Error("الطلب غير موجود");
     if (req.customer_id !== context.userId) throw new Error("ليس لديك صلاحية لهذا الطلب");
     return { offers: 0, reason: req.status };
@@ -186,18 +234,15 @@ export const findNearbyProviderPins = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows, error } = await (supabaseAdmin as any).rpc(
-      "find_nearby_provider_pins",
-      {
-        _lat: data.lat,
-        _lng: data.lng,
-        _type: data.type,
-        _category: data.category ?? null,
-        _service_id: data.serviceId ?? null,
-        _radius_km: data.radiusKm,
-        _limit: data.limit,
-      },
-    );
+    const { data: rows, error } = await (supabaseAdmin as any).rpc("find_nearby_provider_pins", {
+      _lat: data.lat,
+      _lng: data.lng,
+      _type: data.type,
+      _category: data.category ?? null,
+      _service_id: data.serviceId ?? null,
+      _radius_km: data.radiusKm,
+      _limit: data.limit,
+    });
     if (error) return [];
     return (rows ?? []) as ProviderPin[];
   });

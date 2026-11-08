@@ -48,16 +48,13 @@ export const getFriendsStatuses = createServerFn({ method: "GET" })
 
 export const searchProfileByPhone = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
-    z.object({ phone: z.string().trim().min(1).max(50) }).parse(d),
-  )
+  .inputValidator((d) => z.object({ phone: z.string().trim().min(1).max(50) }).parse(d))
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows, error } = await (supabaseAdmin as any).rpc(
-      "search_profile_by_phone",
-      { _phone: data.phone },
-    );
+    const { data: rows, error } = await (supabaseAdmin as any).rpc("search_profile_by_phone", {
+      _phone: data.phone,
+    });
     if (error || !rows) return [];
     return (rows as any[]).filter((r) => r.id !== userId).slice(0, 10);
   });

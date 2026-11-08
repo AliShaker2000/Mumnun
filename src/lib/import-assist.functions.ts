@@ -15,7 +15,9 @@ export const suggestCsvMapping = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => Input.parse(d))
   .handler(async ({ data, context }) => {
-    const { data: isAdmin } = await (context.supabase as any).rpc("has_admin_access", { p_user_id: context.userId });
+    const { data: isAdmin } = await (context.supabase as any).rpc("has_admin_access", {
+      p_user_id: context.userId,
+    });
     if (!isAdmin) throw new Error("غير مصرّح: للمديرين فقط");
 
     const { schemaSummary } = await import("./import-schema");
@@ -45,16 +47,27 @@ Map every CSV header. Use null when a column has no destination. Explain likely 
       } as any);
       const text: string =
         res.output_text ??
-        (res.output ?? []).flatMap((o: any) => o.content ?? []).filter((c: any) => c.type === "output_text").map((c: any) => c.text).join("");
+        (res.output ?? [])
+          .flatMap((o: any) => o.content ?? [])
+          .filter((c: any) => c.type === "output_text")
+          .map((c: any) => c.text)
+          .join("");
       return JSON.parse(text) as {
-        target_table: string; confidence: number; summary_ar: string;
+        target_table: string;
+        confidence: number;
+        summary_ar: string;
         mappings: { csv_column: string; target_column: string | null; note: string }[];
-        issues: { severity: "high" | "medium" | "low"; column: string | null; explanation_ar: string }[];
+        issues: {
+          severity: "high" | "medium" | "low";
+          column: string | null;
+          explanation_ar: string;
+        }[];
       };
     } catch (e) {
       if (e instanceof GatewayError) {
         console.error("AI mapping failed", e.code, e.httpStatus);
-        if (e.httpStatus === 402) throw new Error("نفد رصيد الذكاء الاصطناعي. أضف رصيداً ثم حاول مجدداً.");
+        if (e.httpStatus === 402)
+          throw new Error("نفد رصيد الذكاء الاصطناعي. أضف رصيداً ثم حاول مجدداً.");
         if (e.httpStatus === 429) throw new Error("طلبات كثيرة. انتظر قليلاً ثم حاول.");
         throw new Error("تعذّر تحليل الملف حالياً.");
       }

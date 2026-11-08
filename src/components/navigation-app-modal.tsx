@@ -25,12 +25,13 @@ export function NavigationAppModal({
   defaultTarget = "pickup",
 }: NavigationAppModalProps) {
   const [targetType, setTargetType] = useState<"pickup" | "dest">(
-    defaultTarget === "dest" && destination ? "dest" : pickup ? "pickup" : "dest"
+    defaultTarget === "dest" && destination ? "dest" : pickup ? "pickup" : "dest",
   );
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (isOpen) setTargetType(defaultTarget === "dest" && destination ? "dest" : pickup ? "pickup" : "dest");
+    if (isOpen)
+      setTargetType(defaultTarget === "dest" && destination ? "dest" : pickup ? "pickup" : "dest");
   }, [isOpen, defaultTarget, !!pickup, !!destination]);
 
   if (!isOpen) return null;
@@ -93,7 +94,9 @@ export function NavigationAppModal({
             </div>
             <div>
               <h2 className="text-base font-black">ملاحة</h2>
-              <p className="text-[11px] text-muted-foreground">للوصول السريع إلى العميل أو الوجهة</p>
+              <p className="text-[11px] text-muted-foreground">
+                للوصول السريع إلى العميل أو الوجهة
+              </p>
             </div>
           </div>
           <Button
@@ -125,9 +128,7 @@ export function NavigationAppModal({
               type="button"
               onClick={() => setTargetType("dest")}
               className={`py-2 px-3 rounded-xl text-xs font-bold transition-all btn-press flex items-center justify-center gap-1.5 ${
-                targetType === "dest"
-                  ? "bg-white text-rose-600 shadow-sm"
-                  : "text-muted-foreground"
+                targetType === "dest" ? "bg-white text-rose-600 shadow-sm" : "text-muted-foreground"
               }`}
             >
               <MapPin className="h-3.5 w-3.5" />
@@ -148,7 +149,11 @@ export function NavigationAppModal({
               onClick={copyCoordinates}
               className="text-[11px] font-bold text-primary flex items-center gap-1 bg-white px-2.5 py-1.5 rounded-xl border border-border/40 shadow-sm hover:bg-slate-50"
             >
-              {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? (
+                <Check className="h-3.5 w-3.5 text-emerald-600" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
               <span>{copied ? "تم النسخ" : "نسخ الموقع"}</span>
             </Button>
           )}
@@ -202,8 +207,12 @@ export function NavigationAppModal({
               🧭
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-bold text-xs text-foreground">تطبيق الخرائط الافتراضي للجهاز</div>
-              <div className="text-[10px] text-muted-foreground">فتح عبر التطبيق الافتراضي لهاتفك</div>
+              <div className="font-bold text-xs text-foreground">
+                تطبيق الخرائط الافتراضي للجهاز
+              </div>
+              <div className="text-[10px] text-muted-foreground">
+                فتح عبر التطبيق الافتراضي لهاتفك
+              </div>
             </div>
           </Button>
         </div>

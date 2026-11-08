@@ -40,7 +40,9 @@ export function CancelReasonModal({ role, onClose, onSubmit }: Props) {
     <div
       dir="rtl"
       className="fixed inset-0 z-[9998] bg-black/70 backdrop-blur-md grid place-items-end sm:place-items-center p-0 sm:p-4 animate-in fade-in"
-      onClick={() => { if (!busy) onClose(); }}
+      onClick={() => {
+        if (!busy) onClose();
+      }}
     >
       <div
         onClick={(e) => e.stopPropagation()}

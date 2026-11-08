@@ -5,15 +5,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Headphones, Plus, MessageSquare, Send } from "lucide-react";
 import { toast } from "@/lib/toast";
 
-export const Route = createFileRoute("/support")({ ssr: false,
-  head: () => ({ meta: [
-    { title: "الدعم | ممنون" },
-    { name: "description", content: "تواصل مع دعم ممنون وتابع طلبات المساعدة." },
-    { property: "og:title", content: "الدعم | ممنون" },
-    { property: "og:description", content: "تواصل مع دعم ممنون وتابع طلبات المساعدة." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }), component: SupportCenter });
+export const Route = createFileRoute("/support")({
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "الدعم | ممنون" },
+      { name: "description", content: "تواصل مع دعم ممنون وتابع طلبات المساعدة." },
+      { property: "og:title", content: "الدعم | ممنون" },
+      { property: "og:description", content: "تواصل مع دعم ممنون وتابع طلبات المساعدة." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: SupportCenter,
+});
 
 type Ticket = {
   id: string;
@@ -79,18 +84,31 @@ function SupportCenter() {
 
     const ch = (supabase as any)
       .channel(`support-${ticketId}-${Math.random().toString(36).slice(2, 8)}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_ticket_messages", filter: `ticket_id=eq.${ticketId}` }, (payload: any) => {
-        setMessages((prev) => [...prev, payload.new]);
-      })
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "support_ticket_messages",
+          filter: `ticket_id=eq.${ticketId}`,
+        },
+        (payload: any) => {
+          setMessages((prev) => [...prev, payload.new]);
+        },
+      )
       .subscribe();
 
-    return () => { (supabase as any).removeChannel(ch); };
+    return () => {
+      (supabase as any).removeChannel(ch);
+    };
   }
 
   useEffect(() => {
     if (!selected) return;
     const cleanup = loadMessages(selected.id);
-    return () => { cleanup.then((fn) => fn?.()); };
+    return () => {
+      cleanup.then((fn) => fn?.());
+    };
   }, [selected]);
 
   if (loading) return null;
@@ -128,14 +146,12 @@ function SupportCenter() {
     if (!reply.trim() || !selected) return;
     setBusy(true);
     try {
-      const { error } = await (supabase as any)
-        .from("support_ticket_messages")
-        .insert({
-          ticket_id: selected.id,
-          sender_id: session!.user.id,
-          message: reply,
-          is_staff: false,
-        });
+      const { error } = await (supabase as any).from("support_ticket_messages").insert({
+        ticket_id: selected.id,
+        sender_id: session!.user.id,
+        message: reply,
+        is_staff: false,
+      });
       if (error) throw error;
       setReply("");
     } catch (e: any) {
@@ -160,19 +176,30 @@ function SupportCenter() {
           <div className="glass rounded-2xl p-4 mb-4">
             <div className="font-black text-sm">{selected.subject}</div>
             <div className="text-xs text-muted-foreground mt-1">{selected.description}</div>
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full mt-2 inline-block ${
-              selected.status === "open" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"
-            }`}>
+            <span
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-full mt-2 inline-block ${
+                selected.status === "open"
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-slate-100 text-slate-600"
+              }`}
+            >
               {selected.status === "open" ? "مفتوحة" : "مغلقة"}
             </span>
           </div>
 
           <div ref={supportScrollRef} className="space-y-2 mb-4 max-h-96 overflow-y-auto">
             {messages.map((m) => (
-              <div key={m.id} className={`flex ${m.sender_id === session.user.id ? "justify-end" : "justify-start"}`}>
-                <div className={`glass rounded-2xl px-3 py-2 max-w-[80%] text-sm ${m.is_staff ? "border-2 border-primary/20" : ""}`}>
+              <div
+                key={m.id}
+                className={`flex ${m.sender_id === session.user.id ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`glass rounded-2xl px-3 py-2 max-w-[80%] text-sm ${m.is_staff ? "border-2 border-primary/20" : ""}`}
+                >
                   <div>{m.message}</div>
-                  {m.is_staff && <div className="text-[9px] text-primary font-bold mt-0.5">فريق الدعم</div>}
+                  {m.is_staff && (
+                    <div className="text-[9px] text-primary font-bold mt-0.5">فريق الدعم</div>
+                  )}
                 </div>
               </div>
             ))}
@@ -186,7 +213,11 @@ function SupportCenter() {
               placeholder="اكتب ردك..."
               className="flex-1 glass rounded-xl px-4 py-3 text-sm outline-none"
             />
-            <button onClick={sendReply} disabled={busy} className="p-3 rounded-xl bg-primary text-primary-foreground">
+            <button
+              onClick={sendReply}
+              disabled={busy}
+              className="p-3 rounded-xl bg-primary text-primary-foreground"
+            >
               <Send className="h-4 w-4" />
             </button>
           </div>
@@ -252,9 +283,13 @@ function SupportCenter() {
                 >
                   <div className="flex items-center justify-between">
                     <div className="font-bold text-sm">{t.subject}</div>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      t.status === "open" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"
-                    }`}>
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        t.status === "open"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
                       {t.status === "open" ? "مفتوحة" : "مغلقة"}
                     </span>
                   </div>

@@ -5,7 +5,7 @@ export async function compressImage(
   file: File,
   maxWidth = 1280,
   maxHeight = 1280,
-  quality = 0.7
+  quality = 0.7,
 ): Promise<File> {
   if (!file.type.startsWith("image/")) return file;
   if (file.size < 100_000) return file; // skip small files
@@ -55,7 +55,7 @@ function calculateDimensions(
   origW: number,
   origH: number,
   maxW: number,
-  maxH: number
+  maxH: number,
 ): { width: number; height: number } {
   if (origW <= maxW && origH <= maxH) return { width: origW, height: origH };
   const ratio = Math.min(maxW / origW, maxH / origH);

@@ -67,10 +67,12 @@ export const getProviderReviews = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: reviews, error } = await (supabaseAdmin as any)
       .from("ratings")
-      .select(`
+      .select(
+        `
         id, stars, professionalism, punctuality, quality, comment, created_at,
         rater:profiles!ratings_rater_id_fkey(full_name, avatar_url)
-      `)
+      `,
+      )
       .eq("ratee_id", data.userId)
       .order("created_at", { ascending: false })
       .limit(20);

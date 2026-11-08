@@ -30,7 +30,11 @@ export function ReputationBadge({ badge, size = "md" }: { badge: BadgeData; size
   return (
     <div
       className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-bold"
-      style={{ backgroundColor: `${badge.color}1a`, color: badge.color, border: `1px solid ${badge.color}40` }}
+      style={{
+        backgroundColor: `${badge.color}1a`,
+        color: badge.color,
+        border: `1px solid ${badge.color}40`,
+      }}
     >
       <Icon className={sz} />
       <span className={txt}>{badge.name_ar}</span>
@@ -53,7 +57,11 @@ export function LevelBadge({ level }: { level: LevelData }) {
   return (
     <div
       className="inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 font-black text-sm"
-      style={{ backgroundColor: `${level.level_color}1a`, color: level.level_color, border: `1px solid ${level.level_color}40` }}
+      style={{
+        backgroundColor: `${level.level_color}1a`,
+        color: level.level_color,
+        border: `1px solid ${level.level_color}40`,
+      }}
     >
       <span className="text-base">{level.level_icon}</span>
       <span>{level.level_name}</span>
@@ -97,7 +105,15 @@ export function StarRating({ stars, size = "md" }: { stars: number; size?: "sm" 
   );
 }
 
-export function SubScoreBar({ label, value, icon }: { label: string; value: number; icon: ReactNode }) {
+export function SubScoreBar({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: number;
+  icon: ReactNode;
+}) {
   const pct = (value / 5) * 100;
   return (
     <div className="flex items-center gap-2">
@@ -150,9 +166,21 @@ export function ReputationCard({ reputation }: { reputation: any }) {
       </div>
 
       <div className="space-y-2.5">
-        <SubScoreBar label="الاحترافية" value={Number(reputation.professionalism_avg)} icon={<Trophy className="h-3.5 w-3.5" />} />
-        <SubScoreBar label="الالتزام بالوقت" value={Number(reputation.punctuality_avg)} icon={<Zap className="h-3.5 w-3.5" />} />
-        <SubScoreBar label="جودة العمل" value={Number(reputation.quality_avg)} icon={<Award className="h-3.5 w-3.5" />} />
+        <SubScoreBar
+          label="الاحترافية"
+          value={Number(reputation.professionalism_avg)}
+          icon={<Trophy className="h-3.5 w-3.5" />}
+        />
+        <SubScoreBar
+          label="الالتزام بالوقت"
+          value={Number(reputation.punctuality_avg)}
+          icon={<Zap className="h-3.5 w-3.5" />}
+        />
+        <SubScoreBar
+          label="جودة العمل"
+          value={Number(reputation.quality_avg)}
+          icon={<Award className="h-3.5 w-3.5" />}
+        />
       </div>
 
       {reputation.badges?.length > 0 && (

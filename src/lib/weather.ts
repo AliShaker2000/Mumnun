@@ -21,7 +21,8 @@ export async function detectWeatherCondition(
     };
     const current = json.current;
     if (!current || typeof current.temperature_2m !== "number") return seasonalWeatherFallback();
-    if ((current.precipitation ?? 0) > 0 || RAIN_CODES.has(current.weather_code ?? -1)) return "rain";
+    if ((current.precipitation ?? 0) > 0 || RAIN_CODES.has(current.weather_code ?? -1))
+      return "rain";
     if (current.temperature_2m >= 35) return "heat";
     if (current.temperature_2m <= 12) return "cold";
     return "mild";

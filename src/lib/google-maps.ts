@@ -17,9 +17,10 @@ export function loadGoogleMaps(): Promise<any> {
   if (loaderPromise) return loaderPromise;
 
   const key =
-    (import.meta.env['VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY'] as string | undefined) ||
-    (import.meta.env['VITE_GOOGLE_MAPS_API_KEY'] as string | undefined);
-  const channel = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID as string | undefined;
+    (import.meta.env["VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY"] as string | undefined) ||
+    (import.meta.env["VITE_GOOGLE_MAPS_API_KEY"] as string | undefined);
+  const channel = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID as
+    string | undefined;
 
   if (!key) {
     loaderPromise = loadLeafletFallback();
@@ -182,7 +183,7 @@ function createLeafletAdapter(L: any): any {
       Geocoder: class {
         geocode(req: any, cb: Function) {
           fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${req.location.lat}&lon=${req.location.lng}&accept-language=ar`
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${req.location.lat}&lon=${req.location.lng}&accept-language=ar`,
           )
             .then((r) => r.json())
             .then((data) => {
@@ -195,7 +196,7 @@ function createLeafletAdapter(L: any): any {
         AutocompleteService: class {
           getPlacePredictions(req: any, cb: Function) {
             fetch(
-              `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(req.input)}&countrycodes=iq&accept-language=ar&limit=6`
+              `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(req.input)}&countrycodes=iq&accept-language=ar&limit=6`,
             )
               .then((r) => r.json())
               .then((data) => {
@@ -208,7 +209,7 @@ function createLeafletAdapter(L: any): any {
                       secondary_text: d.display_name?.split(",").slice(1).join(",").trim() || "",
                     },
                   })),
-                  "OK"
+                  "OK",
                 );
               })
               .catch(() => cb([], "ERROR"));
@@ -219,7 +220,7 @@ function createLeafletAdapter(L: any): any {
           constructor(map: any) {}
           getDetails(req: any, cb: Function) {
             fetch(
-              `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(req.placeId)}&accept-language=ar&limit=1`
+              `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(req.placeId)}&accept-language=ar&limit=1`,
             )
               .then((r) => r.json())
               .then((data) => {
@@ -235,7 +236,7 @@ function createLeafletAdapter(L: any): any {
                       formatted_address: data[0].display_name,
                       name: data[0].name || data[0].display_name?.split(",")[0],
                     },
-                    "OK"
+                    "OK",
                   );
                 } else {
                   cb(null, "ZERO_RESULTS");

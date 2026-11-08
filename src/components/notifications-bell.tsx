@@ -67,7 +67,10 @@ export function NotificationsBell() {
       .update({ read_at: new Date().toISOString() })
       .eq("user_id", uid)
       .is("read_at", null);
-    if (error) { toast.error("تعذّر تعليم الإشعارات"); return; }
+    if (error) {
+      toast.error("تعذّر تعليم الإشعارات");
+      return;
+    }
     setItems((cur) => cur.map((n) => ({ ...n, read_at: n.read_at ?? new Date().toISOString() })));
   }
 
@@ -120,12 +123,16 @@ export function NotificationsBell() {
                     {n.link && n.link.startsWith("/") ? (
                       <Link to={n.link as any} onClick={() => setOpen(false)} className="block">
                         <div className="font-bold text-sm">{n.title}</div>
-                        {n.body && <div className="text-xs text-muted-foreground mt-1">{n.body}</div>}
+                        {n.body && (
+                          <div className="text-xs text-muted-foreground mt-1">{n.body}</div>
+                        )}
                       </Link>
                     ) : (
                       <>
                         <div className="font-bold text-sm">{n.title}</div>
-                        {n.body && <div className="text-xs text-muted-foreground mt-1">{n.body}</div>}
+                        {n.body && (
+                          <div className="text-xs text-muted-foreground mt-1">{n.body}</div>
+                        )}
                       </>
                     )}
                   </li>

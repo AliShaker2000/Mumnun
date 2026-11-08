@@ -10,19 +10,19 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID as string | undefined,
 };
 
-const hasFirebaseConfig = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId);
+const hasFirebaseConfig = Boolean(
+  firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId,
+);
 
 export const firebaseApp: FirebaseApp | null =
-  typeof window !== "undefined" && hasFirebaseConfig
-    ? initializeApp(firebaseConfig as any)
-    : null;
+  typeof window !== "undefined" && hasFirebaseConfig ? initializeApp(firebaseConfig as any) : null;
 
 if (typeof window !== "undefined" && firebaseApp) {
   import("firebase/analytics")
     .then(({ getAnalytics, isSupported }) =>
       isSupported().then((ok) => {
         if (ok) getAnalytics(firebaseApp!);
-      })
+      }),
     )
     .catch(() => {});
 }
@@ -54,7 +54,9 @@ export async function requestNotificationPermission(): Promise<string | null> {
   }
 }
 
-export async function onForegroundMessage(cb: (payload: any) => void): Promise<(() => void) | null> {
+export async function onForegroundMessage(
+  cb: (payload: any) => void,
+): Promise<(() => void) | null> {
   if (!firebaseApp) return null;
   const fcm = await getFCM();
   if (!fcm) return null;
@@ -66,7 +68,10 @@ export async function onForegroundMessage(cb: (payload: any) => void): Promise<(
   }
 }
 
-export async function logAnalyticsEvent(eventName: string, params?: Record<string, any>): Promise<void> {
+export async function logAnalyticsEvent(
+  eventName: string,
+  params?: Record<string, any>,
+): Promise<void> {
   if (typeof window === "undefined" || !firebaseApp) return;
   try {
     const { getAnalytics, logEvent } = await import("firebase/analytics");
@@ -75,14 +80,22 @@ export async function logAnalyticsEvent(eventName: string, params?: Record<strin
   } catch {}
 }
 
-export async function startPerformanceTrace(traceName: string): Promise<{ stop: () => void } | null> {
+export async function startPerformanceTrace(
+  traceName: string,
+): Promise<{ stop: () => void } | null> {
   if (typeof window === "undefined" || !firebaseApp) return null;
   try {
     const { getPerformance, trace } = await import("firebase/performance");
     const perf = getPerformance(firebaseApp);
     const t = trace(perf, traceName);
     t.start();
-    return { stop: () => { try { t.stop(); } catch {} } };
+    return {
+      stop: () => {
+        try {
+          t.stop();
+        } catch {}
+      },
+    };
   } catch {
     return null;
   }

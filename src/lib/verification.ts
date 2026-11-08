@@ -41,7 +41,7 @@ export async function fileToCompressedDataUrl(
   file: File,
   maxWidth = 1000,
   maxHeight = 1000,
-  quality = 0.75
+  quality = 0.75,
 ): Promise<string> {
   const compressed = await compressImage(file, maxWidth, maxHeight, quality);
   return new Promise((resolve, reject) => {

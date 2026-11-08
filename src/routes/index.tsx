@@ -5,14 +5,16 @@ import { useWelcomePreferences } from "@/lib/welcome-preferences";
 
 export const Route = createFileRoute("/")({
   ssr: false,
-  head: () => ({ meta: [
-    { title: "ممنون | النقل والخدمات" },
-    { name: "description", content: "رحلات التاكسي والخدمات المنزلية في تطبيق ممنون." },
-    { property: "og:title", content: "ممنون | النقل والخدمات" },
-    { property: "og:description", content: "رحلات التاكسي والخدمات المنزلية في تطبيق ممنون." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "ممنون | النقل والخدمات" },
+      { name: "description", content: "رحلات التاكسي والخدمات المنزلية في تطبيق ممنون." },
+      { property: "og:title", content: "ممنون | النقل والخدمات" },
+      { property: "og:description", content: "رحلات التاكسي والخدمات المنزلية في تطبيق ممنون." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Index,
 });
 

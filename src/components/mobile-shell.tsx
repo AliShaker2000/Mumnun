@@ -34,10 +34,17 @@ export function MobileShell({ children, hideNav }: Props) {
                       onClick={() => playClick("soft")}
                       className={cn(
                         "flex flex-col items-center gap-1 py-3 tap-highlight-none btn-press transition-colors",
-                        active ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground",
+                        active
+                          ? "text-primary font-bold"
+                          : "text-muted-foreground hover:text-foreground",
                       )}
                     >
-                      <Icon className={cn("h-5 w-5", active && "drop-shadow-[0_0_8px_var(--color-primary)]")} />
+                      <Icon
+                        className={cn(
+                          "h-5 w-5",
+                          active && "drop-shadow-[0_0_8px_var(--color-primary)]",
+                        )}
+                      />
                       <span className="text-[11px] font-bold">{label}</span>
                     </Link>
                   </li>

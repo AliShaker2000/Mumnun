@@ -12,15 +12,22 @@ import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
-  validateSearch: (search: Record<string, unknown>): { mode?: Mode } => ({ mode: search.mode === "login" ? "login" : undefined }),
-  head: () => ({ meta: [
-    { title: "تسجيل الدخول | ممنون" },
-    { name: "description", content: "أنشئ حسابك أو سجّل الدخول لطلب النقل والخدمات في ممنون." },
-    { property: "og:title", content: "تسجيل الدخول | ممنون" },
-    { property: "og:description", content: "أنشئ حسابك أو سجّل الدخول لطلب النقل والخدمات في ممنون." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  validateSearch: (search: Record<string, unknown>): { mode?: Mode } => ({
+    mode: search.mode === "login" ? "login" : undefined,
+  }),
+  head: () => ({
+    meta: [
+      { title: "تسجيل الدخول | ممنون" },
+      { name: "description", content: "أنشئ حسابك أو سجّل الدخول لطلب النقل والخدمات في ممنون." },
+      { property: "og:title", content: "تسجيل الدخول | ممنون" },
+      {
+        property: "og:description",
+        content: "أنشئ حسابك أو سجّل الدخول لطلب النقل والخدمات في ممنون.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AuthPage,
 });
 
@@ -30,7 +37,7 @@ function AuthPage() {
   const search = Route.useSearch();
   const [mode, setMode] = useState<Mode>(search.mode || "signup");
   const { language } = useWelcomePreferences();
-  const t = (ar: string, en: string) => language === "ar" ? ar : en;
+  const t = (ar: string, en: string) => (language === "ar" ? ar : en);
   const Forward = language === "ar" ? ArrowLeft : ArrowRight;
   const [identifier, setIdentifier] = useState("");
   const [phone, setPhone] = useState("");
@@ -45,7 +52,9 @@ function AuthPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (password.length < 6) {
-      toast.error(t("كلمة المرور يجب أن تكون 6 أحرف على الأقل", "Password must be at least 6 characters"));
+      toast.error(
+        t("كلمة المرور يجب أن تكون 6 أحرف على الأقل", "Password must be at least 6 characters"),
+      );
       return;
     }
     setBusy(true);
@@ -92,7 +101,9 @@ function AuthPage() {
       } else {
         const id = identifier.trim();
         if (!id) {
-          toast.error(t("أدخل رقم الهاتف أو البريد الإلكتروني", "Enter your phone number or email"));
+          toast.error(
+            t("أدخل رقم الهاتف أو البريد الإلكتروني", "Enter your phone number or email"),
+          );
           setBusy(false);
           return;
         }
@@ -116,9 +127,19 @@ function AuthPage() {
     } catch (err: any) {
       const msg = err?.message || t("حدث خطأ", "Something went wrong");
       if (/Failed to fetch|NetworkError|fetch.*failed/i.test(msg)) {
-        toast.error(t("تعذّر الاتصال بالخادم. تحقق من اتصال الإنترنت وحاول مرة أخرى.", "Unable to connect. Check your internet and try again."));
+        toast.error(
+          t(
+            "تعذّر الاتصال بالخادم. تحقق من اتصال الإنترنت وحاول مرة أخرى.",
+            "Unable to connect. Check your internet and try again.",
+          ),
+        );
       } else if (/already registered|User already/i.test(msg)) {
-        toast.error(t("هذا الحساب مسجّل مسبقاً. أدخل كلمة المرور لتسجيل الدخول.", "This account already exists. Enter your password to sign in."));
+        toast.error(
+          t(
+            "هذا الحساب مسجّل مسبقاً. أدخل كلمة المرور لتسجيل الدخول.",
+            "This account already exists. Enter your password to sign in.",
+          ),
+        );
         setIdentifier(phone || email);
         setMode("login");
       } else if (/Invalid login|Invalid credentials/i.test(msg)) {
@@ -134,14 +155,22 @@ function AuthPage() {
   }
 
   return (
-    <div dir={language === "ar" ? "rtl" : "ltr"} lang={language} className="min-h-screen flex flex-col px-5 pt-8 pb-8">
-      <Button asChild variant="link" className="self-start mb-3"><Link to="/welcome">{t("اللغة والترحيب", "Language & welcome")}</Link></Button>
+    <div
+      dir={language === "ar" ? "rtl" : "ltr"}
+      lang={language}
+      className="min-h-screen flex flex-col px-5 pt-8 pb-8"
+    >
+      <Button asChild variant="link" className="self-start mb-3">
+        <Link to="/welcome">{t("اللغة والترحيب", "Language & welcome")}</Link>
+      </Button>
       <div className="text-center mb-10">
         <div className="inline-flex items-center justify-center h-20 w-20 rounded-3xl bg-gradient-to-br from-primary to-primary-glow glow-primary mb-5 shadow-elegant">
           <span className="text-3xl font-black text-primary-foreground">م</span>
         </div>
         <h1 className="text-4xl font-black text-gradient">{t("ممنون", "Mumnun")}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{t("منصة النقل والخدمات الفاخرة", "Rides and home services")}</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {t("منصة النقل والخدمات الفاخرة", "Rides and home services")}
+        </p>
       </div>
 
       <div className="glass rounded-3xl p-6 shadow-card flex-1 flex flex-col">
@@ -153,7 +182,9 @@ function AuthPage() {
               variant={mode === m ? "default" : "ghost"}
               onClick={() => setMode(m)}
               className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition btn-press tap-highlight-none ${
-                mode === m ? "bg-primary text-primary-foreground shadow-card" : "text-muted-foreground"
+                mode === m
+                  ? "bg-primary text-primary-foreground shadow-card"
+                  : "text-muted-foreground"
               }`}
             >
               {m === "signup" ? t("حساب جديد", "New account") : t("تسجيل دخول", "Sign in")}
@@ -182,7 +213,13 @@ function AuthPage() {
                   className="input-base text-left"
                 />
               </Field>
-              <Field label={t("البريد الإلكتروني (لاستعادة كلمة المرور)", "Email (for password recovery)")} icon={<Mail className="h-4 w-4" />}>
+              <Field
+                label={t(
+                  "البريد الإلكتروني (لاستعادة كلمة المرور)",
+                  "Email (for password recovery)",
+                )}
+                icon={<Mail className="h-4 w-4" />}
+              >
                 <input
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -194,7 +231,10 @@ function AuthPage() {
               </Field>
             </>
           ) : (
-            <Field label={t("رقم الهاتف أو البريد", "Phone number or email")} icon={<Phone className="h-4 w-4" />}>
+            <Field
+              label={t("رقم الهاتف أو البريد", "Phone number or email")}
+              icon={<Phone className="h-4 w-4" />}
+            >
               <input
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
@@ -237,7 +277,10 @@ function AuthPage() {
           </Button>
 
           <p className="text-[11px] text-center text-muted-foreground leading-relaxed">
-            {t("بمتابعتك أنت توافق على الشروط والأحكام وسياسة الخصوصية.", "By continuing, you agree to the terms and privacy policy.")}
+            {t(
+              "بمتابعتك أنت توافق على الشروط والأحكام وسياسة الخصوصية.",
+              "By continuing, you agree to the terms and privacy policy.",
+            )}
           </p>
         </form>
       </div>
@@ -262,7 +305,15 @@ function AuthPage() {
   );
 }
 
-function Field({ label, icon, children }: { label: string; icon?: React.ReactNode; children: React.ReactNode }) {
+function Field({
+  label,
+  icon,
+  children,
+}: {
+  label: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <label className="block">
       <div className="flex items-center gap-2 mb-2 text-xs font-bold text-muted-foreground">
