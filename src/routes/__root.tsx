@@ -3,7 +3,7 @@ import {
   Outlet,
   Link,
   createRootRouteWithContext,
-  useRouter,
+
   HeadContent,
   Scripts,
   type ErrorComponentProps,
@@ -16,6 +16,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/lib/auth-context";
 import { DriverOfferPopup } from "@/components/driver-offer-popup";
 import { GlobalBackButton } from "@/components/back-button";
+import { ProviderPresence } from "@/components/provider-presence";
 
 function NotFoundComponent() {
   return (
@@ -36,11 +37,21 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: ErrorComponentProps) {
+function ErrorComponent({ error }: ErrorComponentProps) {
   console.error(error);
-  const router = useRouter();
+
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    // After a new publish, old page files disappear; reload once to fetch the latest version.
+    const msg = String((error as any)?.message ?? error);
+    if (/dynamically imported module|Importing a module script failed|Loading chunk|Failed to fetch/i.test(msg)) {
+      const key = "mamnoon-reloaded-at";
+      const last = Number(sessionStorage.getItem(key) ?? 0);
+      if (Date.now() - last > 30_000) {
+        sessionStorage.setItem(key, String(Date.now()));
+        window.location.reload();
+      }
+    }
   }, [error]);
 
   return (
@@ -51,8 +62,7 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
-              router.invalidate();
-              reset();
+              window.location.reload();
             }}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
@@ -132,6 +142,16 @@ function RootComponent() {
     if ("serviceWorker" in navigator && window.location.hostname !== "localhost") {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
+    const onPreloadError = () => {
+      const key = "mamnoon-reloaded-at";
+      const last = Number(sessionStorage.getItem(key) ?? 0);
+      if (Date.now() - last > 30_000) {
+        sessionStorage.setItem(key, String(Date.now()));
+        window.location.reload();
+      }
+    };
+    window.addEventListener("vite:preloadError", onPreloadError);
+    return () => window.removeEventListener("vite:preloadError", onPreloadError);
   }, []);
 
   return (
@@ -140,6 +160,7 @@ function RootComponent() {
         <Outlet />
         <GlobalBackButton />
         <DriverOfferPopup />
+        <ProviderPresence />
         <Toaster richColors position="top-center" dir="rtl" />
       </AuthProvider>
     </QueryClientProvider>
