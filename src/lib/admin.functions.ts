@@ -147,27 +147,39 @@ export const adminBlockUser = createServerFn({ method: "POST" })
   .inputValidator((d) =>
     z
       .object({
-        user_id: z.string().uuid(),
+        user_id: z.string().min(1),
         reason: z.string().max(500).optional(),
-        expires_at: z.string().datetime().optional(),
+        expires_at: z.string().optional().nullable(),
+        duration: z
+          .enum(["1_hour", "1_day", "1_week", "1_month", "permanent"])
+          .optional(),
       })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
     await requireAdmin(context);
     const { supabase } = context;
+    let computedExpiresAt = data.expires_at ?? null;
+    if (data.duration) {
+      const now = Date.now();
+      if (data.duration === "1_hour") computedExpiresAt = new Date(now + 3600 * 1000).toISOString();
+      else if (data.duration === "1_day") computedExpiresAt = new Date(now + 86400 * 1000).toISOString();
+      else if (data.duration === "1_week") computedExpiresAt = new Date(now + 7 * 86400 * 1000).toISOString();
+      else if (data.duration === "1_month") computedExpiresAt = new Date(now + 30 * 86400 * 1000).toISOString();
+      else if (data.duration === "permanent") computedExpiresAt = null;
+    }
     const { error } = await (supabase as any).rpc("admin_block_user", {
       p_user_id: data.user_id,
       p_reason: data.reason ?? null,
-      p_expires_at: data.expires_at ?? null,
+      p_expires_at: computedExpiresAt,
     });
     if (error) throw new Error(error.message);
-    return { ok: true };
+    return { ok: true, expires_at: computedExpiresAt };
   });
 
 export const adminUnblockUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ user_id: z.string().uuid() }).parse(d))
+  .inputValidator((d) => z.object({ user_id: z.string().min(1) }).parse(d))
   .handler(async ({ data, context }) => {
     await requireAdmin(context);
     const { supabase } = context;
@@ -180,7 +192,7 @@ export const adminUnblockUser = createServerFn({ method: "POST" })
 
 export const adminGetUserDetail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ user_id: z.string().uuid() }).parse(d))
+  .inputValidator((d) => z.object({ user_id: z.string().min(1) }).parse(d))
   .handler(async ({ data, context }) => {
     await requireStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -253,9 +265,10 @@ export const adminSetProviderStatus = createServerFn({ method: "POST" })
   .inputValidator((d) =>
     z
       .object({
-        user_id: z.string().uuid(),
+        user_id: z.string().min(1),
         type: z.enum(["driver", "worker"]),
-        status: z.enum(["approved", "suspended", "rejected"]),
+        status: z.enum(["approved", "suspended", "rejected", "pending"]),
+        reason: z.string().max(500).optional(),
       })
       .parse(d),
   )

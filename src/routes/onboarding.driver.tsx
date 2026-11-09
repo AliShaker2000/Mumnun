@@ -125,15 +125,25 @@ function OnboardingDriver() {
   const faceInputRef = useRef<HTMLInputElement>(null);
   const idCardInputRef = useRef<HTMLInputElement>(null);
 
+  const [existingDoc, setExistingDoc] = useState<any>(null);
+  const [editingMode, setEditingMode] = useState(false);
+
   // Load existing verification if stored
   useEffect(() => {
     if (session?.user?.id) {
       const existing = getProviderVerification(session.user.id);
       if (existing) {
+        setExistingDoc(existing);
         if (existing.legalName) setLegalName(existing.legalName);
         if (existing.facePhotoUrl) setFacePhoto(existing.facePhotoUrl);
         if (existing.idCardPhotoUrl) setIdCardPhoto(existing.idCardPhotoUrl);
         if (existing.idNumber) setIdNumber(existing.idNumber);
+        if (existing.vehicleMake) setMake(existing.vehicleMake);
+        if (existing.vehicleModel) setModelName(existing.vehicleModel);
+        if (existing.vehicleYear) setYear(String(existing.vehicleYear));
+        if (existing.vehiclePlate) setPlate(existing.vehiclePlate);
+        if (existing.vehicleColor) setColor(existing.vehicleColor);
+        if (existing.vehicleCategory) setCategory(existing.vehicleCategory as any);
       }
     }
   }, [session?.user?.id]);
@@ -217,20 +227,28 @@ function OnboardingDriver() {
         })
         .eq("id", uid);
 
-      // 2. Save detailed verification document
+      // 2. Save detailed verification document with pending status
       saveProviderVerification({
         userId: uid,
         role: "driver",
         legalName: legalName.trim(),
+        phone: profile?.phone,
+        email: profile?.email || session!.user.email,
         facePhotoUrl: facePhoto,
         idCardPhotoUrl: idCardPhoto,
         idNumber: idNumber.trim() || undefined,
         documentType,
         verifiedAt: new Date().toISOString(),
-        status: "verified",
+        status: "pending",
+        vehicleMake: finalMake,
+        vehicleModel: modelName.trim(),
+        vehicleYear: Number(year) || undefined,
+        vehiclePlate: plate.trim(),
+        vehicleColor: color.trim() || undefined,
+        vehicleCategory: category,
       });
 
-      // 3. Upsert driver profile with car data
+      // 3. Upsert driver profile with car data and pending status
       const { error } = await supabase.from("driver_profiles").upsert({
         user_id: uid,
         vehicle_make: finalMake,
@@ -239,18 +257,17 @@ function OnboardingDriver() {
         vehicle_category: category,
         vehicle_plate: plate.trim(),
         vehicle_color: color.trim() || null,
-        available: true,
+        available: false,
+        status: "pending",
       });
 
       if (error) throw error;
 
-      // 4. Grant driver role
-      await grantProviderRole({ data: { role: "driver" } });
-      localStorage.setItem("mumnun-active-role", "driver");
+      setExistingDoc(getProviderVerification(uid));
+      setEditingMode(false);
       await refresh();
 
-      toast.success(`تم تفعيل حساب الكابتن بنجاح! فئتك: ${CATEGORY_META[category].label} 🚗`);
-      navigate({ to: "/home" });
+      toast.success("تم إرسال طلبك بنجاح إلى الإدارة العليا (احمد) للمراجعة والتدقيق 📋");
     } catch (e: any) {
       toast.error(e.message || "حدث خطأ أثناء حفظ البيانات");
     } finally {
@@ -259,6 +276,130 @@ function OnboardingDriver() {
   }
 
   const catMeta = CATEGORY_META[category];
+
+  // If already submitted and not in editing mode, show Status Card
+  if (existingDoc && !editingMode) {
+    const isPending = existingDoc.status === "pending";
+    const isApproved = existingDoc.status === "approved";
+    const isRejected = existingDoc.status === "rejected";
+
+    return (
+      <div className="min-h-screen px-5 pt-12 pb-24 max-w-lg mx-auto">
+        <div
+          className={`glass rounded-3xl p-6 text-center space-y-4 border-2 ${
+            isApproved
+              ? "border-emerald-500/30"
+              : isRejected
+                ? "border-red-500/30"
+                : "border-amber-500/30"
+          }`}
+        >
+          <div
+            className={`h-16 w-16 mx-auto rounded-3xl grid place-items-center text-3xl shadow-lg ${
+              isApproved
+                ? "bg-emerald-100 text-emerald-600"
+                : isRejected
+                  ? "bg-red-100 text-red-600"
+                  : "bg-amber-100 text-amber-600"
+            }`}
+          >
+            {isApproved ? "✅" : isRejected ? "❌" : "⏳"}
+          </div>
+
+          <div>
+            <h2 className="text-xl font-black text-foreground">
+              {isApproved
+                ? "تم قبول واعتماد حسابك ككابتن! 🚗"
+                : isRejected
+                  ? "تم رفض طلب التسجيل"
+                  : "طلبك قيد المراجعة والتدقيق"}
+            </h2>
+            <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+              {isApproved
+                ? "تم تدقيق بيانات سيارتك وهويتك والموافقة عليها من قبل الإدارة العامة (احمد). يمكنك الآن العمل واستقبال الطلبات."
+                : isRejected
+                  ? existingDoc.rejectionReason ||
+                    "تم فحص البيانات من قبل الإدارة العامة وتبيّن وجود نقص أو عدم تطابق في المستندات. يرجى تعديلها وإعادة الإرسال."
+                  : "تم استلام بيانات سيارتك وهويتك بنجاح، ووصلت إلى حساب الإدارة العامة (احمد) للمراجعة والتحقق من صحتها."}
+            </p>
+          </div>
+
+          <div className="bg-slate-50/80 rounded-2xl p-4 text-xs space-y-2 text-right font-medium">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">الاسم المعتمد:</span>
+              <span className="font-bold">{existingDoc.legalName}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">السيارة:</span>
+              <span className="font-bold">
+                {existingDoc.vehicleMake} {existingDoc.vehicleModel} (
+                {existingDoc.vehicleYear || "—"})
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">رقم اللوحة:</span>
+              <span className="font-bold">{existingDoc.vehiclePlate || "—"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">حالة الطلب:</span>
+              <span
+                className={`font-black ${
+                  isApproved
+                    ? "text-emerald-600"
+                    : isRejected
+                      ? "text-destructive"
+                      : "text-amber-600"
+                }`}
+              >
+                {isApproved
+                  ? "مقبول ومعتمد ✓"
+                  : isRejected
+                    ? "مرفوض"
+                    : "بانتظار قرار الإدارة ⏳"}
+              </span>
+            </div>
+          </div>
+
+          <div className="pt-2 space-y-2">
+            {isApproved ? (
+              <button
+                onClick={async () => {
+                  await grantProviderRole({ data: { role: "driver" } });
+                  localStorage.setItem("mumnun-active-role", "driver");
+                  await refresh();
+                  navigate({ to: "/home" });
+                }}
+                className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm btn-press shadow-lg"
+              >
+                الانتقال إلى واجهة الكابتن 🚗
+              </button>
+            ) : (
+              <button
+                onClick={() => setEditingMode(true)}
+                className="w-full py-3 rounded-2xl bg-surface border border-border text-foreground font-bold text-xs btn-press"
+              >
+                تعديل البيانات أو إعادة الرفع ✏️
+              </button>
+            )}
+
+            <button
+              onClick={() => navigate({ to: "/support" })}
+              className="w-full py-3 rounded-2xl bg-primary/10 text-primary font-bold text-xs text-center btn-press"
+            >
+              راسل الدعم (a7md0555666@gmail.com) 💬
+            </button>
+
+            <button
+              onClick={() => navigate({ to: "/" })}
+              className="w-full py-2.5 text-xs text-muted-foreground font-bold"
+            >
+              العودة للرئيسية
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen px-5 pt-10 pb-36 max-w-lg mx-auto">

@@ -348,6 +348,13 @@ function NewRequest() {
       toast.success("تم إرسال الطلب بنجاح!");
       if (type === "taxi") {
         runDispatch({ data: { requestId: data.id } }).catch((e) => console.warn("[dispatch]", e));
+        try {
+          if (typeof BroadcastChannel !== "undefined") {
+            const bc = new BroadcastChannel("mumnun-offers");
+            bc.postMessage({ type: "NEW_TAXI_REQUEST", requestId: data.id });
+            setTimeout(() => bc.close(), 1000);
+          }
+        } catch {}
       }
       navigate({ to: "/request/$id", params: { id: data.id } });
     } catch (e: any) {

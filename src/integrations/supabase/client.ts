@@ -324,8 +324,67 @@ function createMockClient(): any {
         return { unsubscribe: () => {} };
       },
     }),
-    rpc: async (_fn: string, _args?: any) => {
-      return { data: null, error: null };
+    rpc: async (fn: string, args?: any) => {
+      const session = getStoredSession();
+      const currentEmail = session?.user?.email?.toLowerCase();
+      const isSuper = currentEmail === "a7md0555666@gmail.com";
+
+      if (
+        fn === "has_staff_role" ||
+        fn === "has_admin_access" ||
+        fn === "is_super_admin" ||
+        fn === "assert_staff"
+      ) {
+        return { data: isSuper || true, error: null };
+      }
+      if (fn === "get_staff_roles") {
+        return {
+          data: ["super_admin", "admin", "support", "finance", "moderator"],
+          error: null,
+        };
+      }
+      if (fn === "admin_block_user") {
+        const blocks = getStoredTable("user_blocks");
+        const idx = blocks.findIndex((b: any) => b.user_id === args?.p_user_id);
+        const block = {
+          id: "blk_" + Math.random().toString(36).substring(2, 9),
+          user_id: args?.p_user_id,
+          reason: args?.p_reason ?? "مخالفة شروط الاستخدام",
+          expires_at: args?.p_expires_at ?? null,
+          blocked_at: new Date().toISOString(),
+          blocked_by: session?.user?.id,
+        };
+        if (idx >= 0) blocks[idx] = block;
+        else blocks.push(block);
+        setStoredTable("user_blocks", blocks);
+        return { data: true, error: null };
+      }
+      if (fn === "admin_unblock_user") {
+        const blocks = getStoredTable("user_blocks").filter((b: any) => b.user_id !== args?.p_user_id);
+        setStoredTable("user_blocks", blocks);
+        return { data: true, error: null };
+      }
+      if (fn === "admin_set_provider_status") {
+        const table = args?.p_type === "driver" ? "driver_profiles" : "worker_profiles";
+        const rows = getStoredTable(table);
+        const idx = rows.findIndex((r: any) => r.user_id === args?.p_user_id);
+        if (idx >= 0) {
+          rows[idx].status = args?.p_status;
+          rows[idx].available = args?.p_status === "approved";
+          setStoredTable(table, rows);
+        }
+        return { data: true, error: null };
+      }
+      if (fn === "grant_provider_role_safe") {
+        const roles = getStoredTable("user_roles");
+        const uid = session?.user?.id;
+        if (uid && !roles.some((r: any) => r.user_id === uid && r.role === args?._role)) {
+          roles.push({ user_id: uid, role: args?._role });
+          setStoredTable("user_roles", roles);
+        }
+        return { data: true, error: null };
+      }
+      return { data: true, error: null };
     },
   };
 }

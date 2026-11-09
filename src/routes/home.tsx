@@ -16,6 +16,7 @@ import {
   ArrowUpLeft,
   TrendingUp,
   Clock,
+  Crown,
 } from "lucide-react";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { toast } from "@/lib/toast";
@@ -48,23 +49,21 @@ function greetingByHour() {
 }
 
 function HomePage() {
-  const { loading, session, profile, roles } = useAuth();
-  const [activeRole, setActiveRole] = useState<AppRole | null>(null);
+  const { loading, session, profile, roles, activeRole, isSuperAdmin } = useAuth();
   const { theme, toggle } = useTheme();
   const greet = useMemo(greetingByHour, []);
-
-  useEffect(() => {
-    if (!roles.length) return;
-    if (activeRole && roles.includes(activeRole)) return;
-    const saved = localStorage.getItem("mumnun-active-role") as AppRole | null;
-    setActiveRole(saved && roles.includes(saved) ? saved : roles[0]);
-  }, [roles, activeRole]);
 
   if (loading) return null;
   if (!session) return <Navigate to="/auth" />;
   if (!roles.length) return <Navigate to="/select-role" />;
 
   const firstName = (profile?.full_name || "صديقنا").split(" ")[0];
+  const roleTitle =
+    activeRole === "driver"
+      ? "كابتن تكسي 🚗"
+      : activeRole === "worker"
+        ? "فني خدمات 🛠️"
+        : "زبون 👤";
 
   return (
     <MobileShell>
@@ -77,10 +76,44 @@ function HomePage() {
       </div>
 
       <div className="relative px-5 pt-10 pb-6">
+        {isSuperAdmin && (
+          <div className="mb-4 glass rounded-2xl p-3.5 border border-amber-500/40 bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent flex items-center justify-between animate-pop-in shadow-sm">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-500 grid place-items-center shrink-0">
+                <Crown className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="text-xs font-black text-amber-600 dark:text-amber-400">
+                  حساب المدير العام (أحمد)
+                </div>
+                <div className="text-[10px] text-muted-foreground font-medium">
+                  اعتماد السائقين والفنيين · حظر الحسابات · توزيع الخصومات · الدعم
+                </div>
+              </div>
+            </div>
+            <Link
+              to="/admin"
+              className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black flex items-center gap-1 transition shadow-sm shrink-0"
+            >
+              <span>لوحة الإدارة</span>
+              <ArrowUpLeft className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        )}
+
         <div className="flex items-center justify-between mb-6 animate-pop-in">
           <div>
-            <div className="text-[11px] font-bold tracking-wider text-primary/80 uppercase">
-              {greet}
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold tracking-wider text-primary/80 uppercase">
+                {greet}
+              </span>
+              <Link
+                to="/profile"
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-bold transition"
+                title="تغيير الدور من الإعدادات"
+              >
+                <span>{roleTitle}</span>
+              </Link>
             </div>
             <div className="text-2xl font-black leading-tight mt-0.5 text-foreground">
               {firstName} <span className="inline-block animate-float">👋</span>
@@ -106,39 +139,9 @@ function HomePage() {
           </div>
         </div>
 
-        {roles.length > 1 && (
-          <div className="relative flex bg-surface-2 rounded-2xl p-1 mb-5 text-xs font-bold animate-pop-in">
-            {roles.map((r) => {
-              const active = activeRole === r;
-              return (
-                <button
-                  key={r}
-                  onClick={() => {
-                    playClick("soft");
-                    setActiveRole(r);
-                    localStorage.setItem("mumnun-active-role", r);
-                  }}
-                  className={`relative flex-1 py-2.5 rounded-xl btn-press tap-highlight-none transition-colors ${
-                    active
-                      ? "text-primary-foreground font-black"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {active && (
-                    <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary to-primary-glow shadow-[0_6px_20px_-8px_var(--color-primary)]" />
-                  )}
-                  <span className="relative">
-                    {r === "customer" ? "زبون" : r === "driver" ? "كابتن" : "فني"}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {activeRole === "customer" && <CustomerHome />}
         {activeRole === "driver" && <ProviderHome type="taxi" />}
         {activeRole === "worker" && <ProviderHome type="service" />}
+        {activeRole !== "driver" && activeRole !== "worker" && <CustomerHome />}
       </div>
     </MobileShell>
   );
@@ -346,7 +349,20 @@ function ProviderHome({ type }: { type: "taxi" | "service" }) {
         loadRequests(),
       )
       .subscribe();
+
+    const timer = setInterval(loadRequests, 3000);
+
+    let bc: BroadcastChannel | null = null;
+    try {
+      if (typeof BroadcastChannel !== "undefined") {
+        bc = new BroadcastChannel("mumnun-offers");
+        bc.onmessage = () => loadRequests();
+      }
+    } catch {}
+
     return () => {
+      clearInterval(timer);
+      bc?.close();
       supabase.removeChannel(channel);
     };
   }, [session, type, table]);

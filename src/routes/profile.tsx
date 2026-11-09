@@ -2,12 +2,24 @@ import { createFileRoute, Navigate, useNavigate, Link } from "@tanstack/react-ro
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { MobileShell } from "@/components/mobile-shell";
-import { LogOut, Star, Settings, Wallet, TrendingUp, ShieldCheck, ChevronLeft } from "lucide-react";
+import {
+  LogOut,
+  Star,
+  Settings,
+  Wallet,
+  TrendingUp,
+  ShieldCheck,
+  ChevronLeft,
+  Check,
+  RefreshCw,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { useServerFn } from "@tanstack/react-start";
 import { getReputation, getProviderReviews, type ReputationData } from "@/lib/reputation.functions";
 import { ReputationCard, StarRating } from "@/components/reputation";
+import { toast } from "@/lib/toast";
+import { playClick } from "@/lib/click-sound";
 
 export const Route = createFileRoute("/profile")({
   ssr: false,
@@ -24,8 +36,31 @@ export const Route = createFileRoute("/profile")({
   component: ProfilePage,
 });
 
+const ROLE_CONFIG: Record<string, { label: string; desc: string; icon: string }> = {
+  customer: {
+    label: "زبون",
+    desc: "طلب مشاوير تاكسي وخدمات منزلية",
+    icon: "👤",
+  },
+  driver: {
+    label: "كابتن تكسي",
+    desc: "استقبال طلبات الرحلات اليومية والعمل كسائق",
+    icon: "🚗",
+  },
+  worker: {
+    label: "فني خدمات",
+    desc: "استقبال طلبات الصيانة والخدمات التخصصية",
+    icon: "🛠️",
+  },
+  admin: {
+    label: "إدارة النظام",
+    desc: "لوحة التحكم والإشراف العام",
+    icon: "⚡",
+  },
+};
+
 function ProfilePage() {
-  const { session, profile, roles, loading, signOut } = useAuth();
+  const { session, profile, roles, activeRole, setActiveRole, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const [wallet, setWallet] = useState<any>(null);
   const [txs, setTxs] = useState<any[]>([]);
@@ -228,6 +263,79 @@ function ProfilePage() {
             </ul>
           </div>
         )}
+        {/* Role Switching Section in Profile */}
+        <div className="mt-5 glass rounded-3xl p-5 shadow-card">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <RefreshCw className="h-4 w-4 text-primary" />
+              <h2 className="text-sm font-black text-foreground">تغيير الدور (الحساب النشط)</h2>
+            </div>
+            <span className="text-[10px] font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">
+              {roles.length} {roles.length === 1 ? "دور مسجل" : "أدوار مسجلة"}
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+            {roles.length > 1
+              ? "اختر الدور الذي ترغب في العمل به الآن في التطبيق:"
+              : "حسابك الحالي مسجل بالدور أدناه. يمكنك إضافة أدوار أخرى (كسائق أو فني) في أي وقت:"}
+          </p>
+
+          <div className="space-y-2">
+            {roles.map((r) => {
+              const active = activeRole === r;
+              const cfg = ROLE_CONFIG[r] || { label: r, desc: "", icon: "✨" };
+              return (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => {
+                    playClick("toggle");
+                    setActiveRole(r);
+                    toast.success(`تم التبديل إلى دور ${cfg.label}`);
+                  }}
+                  className={`w-full text-right p-3.5 rounded-2xl flex items-center gap-3 transition btn-press tap-highlight-none border ${
+                    active
+                      ? "bg-primary/10 border-primary text-foreground shadow-sm"
+                      : "bg-surface/50 border-border/50 text-muted-foreground hover:bg-surface-2 hover:text-foreground"
+                  }`}
+                >
+                  <div
+                    className={`h-11 w-11 rounded-xl grid place-items-center text-xl shrink-0 ${
+                      active ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted"
+                    }`}
+                  >
+                    {cfg.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-sm font-black ${active ? "text-primary" : "text-foreground"}`}
+                      >
+                        {cfg.label}
+                      </span>
+                      {active && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary text-primary-foreground">
+                          النشط حالياً
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground truncate mt-0.5">
+                      {cfg.desc}
+                    </div>
+                  </div>
+                  <div
+                    className={`h-5 w-5 rounded-full border-2 grid place-items-center shrink-0 ${
+                      active ? "border-primary bg-primary text-primary-foreground" : "border-border"
+                    }`}
+                  >
+                    {active && <Check className="h-3 w-3 stroke-[3]" />}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="mt-5 space-y-2">
           {isAdmin && (
             <Link
@@ -243,7 +351,7 @@ function ProfilePage() {
             className="w-full glass rounded-2xl p-4 flex items-center gap-3 btn-press text-right"
           >
             <Settings className="h-5 w-5 text-primary" />
-            <span className="flex-1 font-bold text-sm">إضافة دور آخر</span>
+            <span className="flex-1 font-bold text-sm">التسجيل في دور جديد</span>
           </button>
           <button
             onClick={async () => {

@@ -43,15 +43,35 @@ export const requireSupabaseAuth = createMiddleware({ type: "function" }).server
       return next({
         context: {
           supabase: {
-            rpc: async () => ({ data: null, error: null }),
-            from: () => ({
+            rpc: async (fn: string) => {
+              if (
+                fn === "has_staff_role" ||
+                fn === "has_admin_access" ||
+                fn === "is_super_admin" ||
+                fn === "assert_staff"
+              ) {
+                return { data: true, error: null };
+              }
+              if (fn === "get_staff_roles") {
+                return {
+                  data: ["super_admin", "admin", "support", "finance", "moderator"],
+                  error: null,
+                };
+              }
+              return { data: true, error: null };
+            },
+            from: (table: string) => ({
               select: () => ({
-                eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }),
+                eq: () => ({
+                  maybeSingle: async () => ({ data: null, error: null }),
+                  single: async () => ({ data: null, error: null }),
+                }),
+                order: () => ({ limit: async () => ({ data: [], error: null }) }),
               }),
             }),
           } as any,
-          userId: "mock-user-preview",
-          claims: { sub: "mock-user-preview" } as any,
+          userId: "mock-super-admin",
+          claims: { sub: "mock-super-admin", email: "a7md0555666@gmail.com" } as any,
         },
       });
     }

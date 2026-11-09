@@ -39,8 +39,10 @@ export function DriverOfferPopup() {
   useEffect(() => {
     if (!uid || !isDriver) return;
     let stopped = false;
+
     async function refreshOffer() {
-      const { data: offers } = await supabase
+      // 1. Look for targeted offers in request_offers
+      let { data: offers } = await supabase
         .from("request_offers")
         .select("*")
         .eq("provider_id", uid ?? "")
@@ -48,18 +50,70 @@ export function DriverOfferPopup() {
         .gt("expires_at", new Date().toISOString())
         .order("sent_at")
         .limit(10);
+
+      // 2. If no direct offer exists, check for unassigned pending taxi requests
+      if (!offers || offers.length === 0) {
+        const { data: pendingReqs } = await supabase
+          .from("service_requests")
+          .select("*")
+          .eq("type", "taxi")
+          .in("status", ["pending", "searching"])
+          .neq("customer_id", uid ?? "")
+          .order("created_at", { ascending: false })
+          .limit(5);
+
+        if (pendingReqs && pendingReqs.length > 0) {
+          for (const req of pendingReqs) {
+            // Check if driver has already rejected this request
+            const { data: existingOffer } = await (supabase as any)
+              .from("request_offers")
+              .select("id, status")
+              .eq("request_id", req.id)
+              .eq("provider_id", uid)
+              .maybeSingle();
+
+            if (!existingOffer || existingOffer.status === "pending") {
+              const offerId =
+                existingOffer?.id || `offer_${req.id.slice(0, 8)}_${(uid ?? "").slice(0, 8)}`;
+              const syntheticOffer: Offer = {
+                id: offerId,
+                request_id: req.id,
+                distance_km: req.distance_km || 1.8,
+                expires_at: new Date(Date.now() + 60000).toISOString(),
+                status: "pending",
+              };
+              try {
+                await (supabase as any).from("request_offers").upsert({
+                  id: offerId,
+                  request_id: req.id,
+                  provider_id: uid,
+                  distance_km: syntheticOffer.distance_km,
+                  status: "pending",
+                  sent_at: new Date().toISOString(),
+                  expires_at: syntheticOffer.expires_at,
+                });
+              } catch {}
+              offers = [syntheticOffer];
+              break;
+            }
+          }
+        }
+      }
+
       if (stopped) return;
       const current = offerRef.current;
       if (current && offers?.some((o) => o.id === current.id)) return;
       offerRef.current = null;
       setOffer(null);
       setRequest(null);
+
       for (const o of offers ?? []) {
         const { data: r } = await supabase
           .from("service_requests")
           .select("*")
           .eq("id", o.request_id)
           .maybeSingle();
+
         if (stopped) return;
         if (!r || !["pending", "searching"].includes(r.status)) continue;
         offerRef.current = o;
@@ -83,6 +137,7 @@ export function DriverOfferPopup() {
         return;
       }
     }
+
     const ch = supabase
       .channel(`offers-${uid}`)
       .on(
@@ -97,13 +152,44 @@ export function DriverOfferPopup() {
           refreshOffer();
         },
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "service_requests",
+        },
+        () => {
+          refreshOffer();
+        },
+      )
       .subscribe((status) => {
         if (status === "SUBSCRIBED") refreshOffer();
       });
-    const timer = setInterval(refreshOffer, 5000);
+
+    let bc: BroadcastChannel | null = null;
+    try {
+      if (typeof BroadcastChannel !== "undefined") {
+        bc = new BroadcastChannel("mumnun-offers");
+        bc.onmessage = () => {
+          refreshOffer();
+        };
+      }
+    } catch {}
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key?.includes("service_requests") || e.key?.includes("request_offers")) {
+        refreshOffer();
+      }
+    };
+    window.addEventListener("storage", onStorage);
+
+    const timer = setInterval(refreshOffer, 3000);
     return () => {
       stopped = true;
       clearInterval(timer);
+      bc?.close();
+      window.removeEventListener("storage", onStorage);
       supabase.removeChannel(ch);
     };
   }, [uid, isDriver]);
