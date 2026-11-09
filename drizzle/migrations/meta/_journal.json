@@ -43,6 +43,13 @@
       "when": 1793927583568,
       "tag": "0005_taxi_min_fare_1000",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794183170058,
+      "tag": "0006_provider_presence_locations",
+      "breakpoints": true
     }
   ]
 }
